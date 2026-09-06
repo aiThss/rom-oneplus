@@ -5,6 +5,7 @@ import {
   timingSafeEqual,
 } from 'node:crypto';
 import { db } from './store';
+import { platform } from '@/lib/platform';
 export const SESSION_COOKIE = 'rom_session';
 const digest = (s: string) => createHash('sha256').update(s).digest('hex');
 export async function isAdmin(req: Request) {
@@ -21,7 +22,7 @@ export async function isAdmin(req: Request) {
 }
 export function checkOrigin(req: Request) {
   if (
-    req.headers.get('origin') !== new URL(req.url).origin ||
+    req.headers.get('origin') !== (platform.publicOrigin || new URL(req.url).origin) ||
     req.headers.get('x-rom-csrf') !== '1'
   )
     throw new Error('Yêu cầu không cùng nguồn.');
@@ -53,16 +54,15 @@ export async function login(req: Request, username: string, password: string) {
       .run();
     throw new Error('Tên đăng nhập hoặc mật khẩu không đúng.');
   }
-  await db().batch([
-    db().prepare('DELETE FROM login_throttle'),
-    db().prepare('DELETE FROM sessions WHERE expires<?').bind(Date.now()),
-  ]);
+  await db().prepare('DELETE FROM login_throttle').run();
+  await db().prepare('DELETE FROM sessions WHERE expires<?').bind(Date.now()).run();
   const token = randomBytes(32).toString('hex');
   await db()
     .prepare('INSERT INTO sessions(token,expires) VALUES(?,?)')
     .bind(digest(token), Date.now() + 28800000)
     .run();
-  return `${SESSION_COOKIE}=${token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=28800${new URL(req.url).protocol === 'https:' ? '; Secure' : ''}`;
+  const secure = new URL(platform.publicOrigin || req.url).protocol === 'https:';
+  return `${SESSION_COOKIE}=${token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=28800${secure ? '; Secure' : ''}`;
 }
 export async function logout(req: Request) {
   const token = (req.headers.get('cookie') || '')

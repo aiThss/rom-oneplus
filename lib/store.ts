@@ -1,4 +1,4 @@
-import { env } from 'cloudflare:workers';
+import { platform } from '@/lib/platform';
 import {
   defaultSettings,
   type Settings,
@@ -7,7 +7,7 @@ import {
   type SiteLog,
 } from './model';
 export function db() {
-  return env.DB;
+  return platform.db;
 }
 export async function readDocument<T>(key: string, fallback: T): Promise<T> {
   const row = await db()

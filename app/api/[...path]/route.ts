@@ -1,4 +1,4 @@
-import { env } from 'cloudflare:workers';
+import { platform } from '@/lib/platform';
 import {
   catalog,
   ota,
@@ -72,6 +72,10 @@ export async function GET(req: Request) {
   try {
     const u = new URL(req.url);
     const route = u.pathname.slice(5);
+    if (route === 'health') {
+      await db().prepare('SELECT 1 AS healthy').first();
+      return json({ status: 'ok' });
+    }
     if (route === 'settings') {
       const config = await settings();
       return json({
@@ -90,7 +94,7 @@ export async function GET(req: Request) {
       const key = route.slice(7);
       if (!/^[a-f0-9-]+\.(png|jpg|webp)$/.test(key))
         return json({ error: 'Không tìm thấy ảnh.' }, 404);
-      const file = await env.FILES.get(key);
+      const file = await platform.files.get(key);
       if (!file) return json({ error: 'Không tìm thấy ảnh.' }, 404);
       return new Response(file.body, {
         headers: {
@@ -256,7 +260,7 @@ export async function POST(req: Request) {
         ext = 'webp';
       if (!ext) throw new Error('Chỉ nhận ảnh PNG, JPG hoặc WebP.');
       const key = crypto.randomUUID() + '.' + ext;
-      await env.FILES.put(key, buffer, {
+      await platform.files.put(key, buffer, {
         httpMetadata: {
           contentType: ext === 'jpg' ? 'image/jpeg' : 'image/' + ext,
         },

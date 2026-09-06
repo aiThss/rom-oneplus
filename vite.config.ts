@@ -1,13 +1,15 @@
+import { fileURLToPath } from 'node:url';
 import { sites } from '@openai/sites-vite-plugin';
 import tailwindcss from '@tailwindcss/postcss';
 import vinext from 'vinext';
 import { defineConfig } from 'vite';
-import hostingConfig from './.openai/hosting.json';
+import hostingConfig from './.openai/hosting.json' with { type: 'json' };
 
 const SITE_CREATOR_PLACEHOLDER_DATABASE_ID =
   '00000000-0000-4000-8000-000000000000';
 
 const { d1, r2 } = hostingConfig;
+const isNodeTarget = process.env.TARGET === 'node';
 
 // macOS Seatbelt blocks FSEvents, so Codex previews need polling for HMR.
 const isCodexSeatbeltSandbox = process.env.CODEX_SANDBOX === 'seatbelt';
@@ -41,11 +43,33 @@ export default defineConfig(async () => {
   process.env.WRANGLER_LOG_PATH ??= '.wrangler/logs';
   process.env.MINIFLARE_REGISTRY_PATH ??= '.wrangler/registry';
 
-  // Wrangler snapshots its log path while the Cloudflare plugin is imported.
-  const { cloudflare } = await import('@cloudflare/vite-plugin');
+  const plugins = [vinext(), sites()];
+
+  if (!isNodeTarget) {
+    // Wrangler snapshots its log path while the Cloudflare plugin is imported.
+    const { cloudflare } = await import('@cloudflare/vite-plugin');
+    plugins.push(
+      cloudflare({
+        viteEnvironment: { name: 'rsc', childEnvironments: ['ssr'] },
+        config: localBindingConfig,
+      }),
+    );
+  }
 
   return {
     css: { postcss: { plugins: [tailwindcss()] } },
+    resolve: {
+      alias: isNodeTarget
+        ? [
+            {
+              find: '@/lib/platform',
+              replacement: fileURLToPath(
+                new URL('./runtime/platform-node.ts', import.meta.url),
+              ),
+            },
+          ]
+        : [],
+    },
     server: {
       host: '127.0.0.1',
       port: 4313,
@@ -66,13 +90,6 @@ export default defineConfig(async () => {
         ? { watch: { useFsEvents: false, usePolling: true } }
         : {}),
     },
-    plugins: [
-      vinext(),
-      sites(),
-      cloudflare({
-        viteEnvironment: { name: 'rsc', childEnvironments: ['ssr'] },
-        config: localBindingConfig,
-      }),
-    ],
+    plugins,
   };
 });

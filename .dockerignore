@@ -1,0 +1,12 @@
+﻿node_modules
+.git
+.local
+.wrangler
+.next
+.vinext
+dist
+*.sqlite
+*.sqlite*
+.env
+.env.*
+tests

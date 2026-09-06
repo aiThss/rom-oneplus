@@ -1,0 +1,30 @@
+﻿services:
+  rom-oneplus:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rom-oneplus
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - TARGET=node
+      - HOST=0.0.0.0
+      - PORT=3000
+      - DATA_DIR=/app/data
+      - PUBLIC_ORIGIN=
+      - ADMIN_USERNAME=
+      - ADMIN_PASSWORD=
+    volumes:
+      - rom_data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  rom_data:
+    name: rom_oneplus_data
