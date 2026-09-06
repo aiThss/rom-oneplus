@@ -82,7 +82,7 @@ export function Shell({
       <Sidebar variant="inset" className="rom-sidebar">
         <SidebarHeader className="brand-header">
           <a href="/" className="brand">
-            <img src={logo || '/logo.svg'} alt="" className="brand-logo" />
+            <img src={logo || '/logo.png'} alt="" className="brand-logo" />
             <span>
               {name}
               <small>Phần mềm & firmware</small>

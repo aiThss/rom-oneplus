@@ -78,7 +78,7 @@ export type SiteLog = {
 };
 export const defaultSettings: Settings = {
   name: 'Kho ROM Việt',
-  logo: '/logo.svg',
+  logo: '/logo.png',
   accent: '#007aff',
   brands: ['OnePlus'],
   devices: [],
