@@ -47,7 +47,9 @@ export default defineConfig(async () => {
   return {
     css: { postcss: { plugins: [tailwindcss()] } },
     server: {
-      host: 'localhost',
+      host: '127.0.0.1',
+      port: 4313,
+      strictPort: true,
       fs: {
         deny: [
           '.env',

@@ -12,7 +12,7 @@ npm ci
 npm run dev
 ```
 
-Mở địa chỉ local do lệnh in ra, mặc định [http://localhost:3000](http://localhost:3000). `predev` áp dụng migration local và chỉ tạo tài khoản khi chưa có. Tài khoản hiện có và nội dung được giữ nguyên khi khởi động lại.
+Mở [http://127.0.0.1:4313](http://127.0.0.1:4313). Dự án dùng cổng riêng để tách cache và service worker khỏi các ứng dụng trước đây trên `localhost:3000`. Chế độ phát triển báo lỗi nếu cổng 4313 đã bận, tránh tự chuyển sang cổng khác. `predev` áp dụng migration local và chỉ tạo tài khoản khi chưa có. Tài khoản hiện có và nội dung được giữ nguyên khi khởi động lại.
 
 - Thông tin đăng nhập: `.local/admin-access.txt`. Tệp này bị loại khỏi Git và bị chặn khỏi máy chủ phát triển. Không chia sẻ tệp hoặc đưa lên hosting công khai.
 - Đặt lại mật khẩu: dừng ứng dụng rồi chạy `npm run admin:reset`. Lệnh tạo mật khẩu ngẫu nhiên mới, cập nhật tệp local và vô hiệu hóa các phiên cũ.
@@ -69,7 +69,7 @@ Kiểm tra tích hợp dùng dữ liệu tạm, khôi phục phần ghi đè đ�
 
 Build sản xuất tạo `dist/server` và `dist/client`. `npm start` chạy bản build bằng Wrangler trên loopback, vẫn dùng dữ liệu local; chưa publish. Trước khi triển khai thật cần chọn hosting, cấu hình binding và rà lại phiên bản toolchain. Các gói React/Vinext/Vite đã được nâng từ starter để sửa cảnh báo hiện có; toolchain Cloudflare của starter vẫn có cảnh báo npm audit (bao gồm undici trong Miniflare), không phải một xác nhận an toàn để mở máy chủ dev ra Internet.
 
-Để dùng bản build: dừng `npm run dev`, chạy `npm run build`, rồi `npm start`. Cả hai chế độ dùng cùng dữ liệu và địa chỉ `http://localhost:3000`; chỉ chạy một chế độ tại một thời điểm. Dừng bằng Ctrl+C trong cửa sổ lệnh đang chạy.
+Để dùng bản build: dừng `npm run dev`, chạy `npm run build`, rồi `npm start`. Cả hai chế độ dùng cùng dữ liệu và địa chỉ `http://127.0.0.1:4313`; chỉ chạy một chế độ tại một thời điểm. Dừng bằng Ctrl+C trong cửa sổ lệnh đang chạy.
 
 Kiểm tra lưu qua khởi động lại: chạy `node tests/restart.mjs prepare` khi server hoạt động, dừng rồi khởi động lại server, sau đó chạy `node tests/restart.mjs verify`. Bước verify kiểm tra cấu hình, nội dung biên tập và bản nháp; khôi phục nội dung trước kiểm tra. Không biên tập đồng thời trong quá trình này. Khi bàn giao, 11 kiểm thử parser/validation, kiểm thử API với nguồn thật, kiểm tra lưu sau khởi động lại, ảnh R2 và build đã đạt.
 

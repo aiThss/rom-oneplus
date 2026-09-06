@@ -1,5 +1,11 @@
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import {
+  mkdirSync,
+  writeFileSync,
+  rmSync,
+  existsSync,
+  readFileSync,
+} from 'node:fs';
 import { randomBytes, scryptSync } from 'node:crypto';
 import { resolve } from 'node:path';
 const root = resolve(import.meta.dirname, '..');
@@ -51,10 +57,22 @@ if (!status[0]?.results?.length || process.argv.includes('--reset-admin')) {
   }
   writeFileSync(
     '.local/admin-access.txt',
-    `Kho ROM Việt — tài khoản quản trị local\n\nĐịa chỉ: http://localhost:3000/admin\nTên đăng nhập: admin\nMật khẩu: ${password}\n\nTệp này chỉ nằm trên máy, bị loại khỏi Git. Giữ riêng hoặc xóa sau khi lưu vào trình quản lý mật khẩu.\nĐặt lại bằng: npm run admin:reset\n`,
+    `Kho ROM Việt — tài khoản quản trị local\n\nĐịa chỉ: http://127.0.0.1:4313/admin\nTên đăng nhập: admin\nMật khẩu: ${password}\n\nTệp này chỉ nằm trên máy, bị loại khỏi Git. Giữ riêng hoặc xóa sau khi lưu vào trình quản lý mật khẩu.\nĐặt lại bằng: npm run admin:reset\n`,
     { mode: 0o600 },
   );
   console.log(
     'Tài khoản đã tạo. Thông tin tại .local/admin-access.txt (không đưa vào Git).',
   );
-} else console.log('Giữ nguyên tài khoản quản trị đã có.');
+} else {
+  const accessFile = '.local/admin-access.txt';
+  if (existsSync(accessFile)) {
+    writeFileSync(
+      accessFile,
+      readFileSync(accessFile, 'utf8').replace(
+        /^Địa chỉ: .*$/m,
+        'Địa chỉ: http://127.0.0.1:4313/admin',
+      ),
+    );
+  }
+  console.log('Giữ nguyên tài khoản quản trị đã có.');
+}

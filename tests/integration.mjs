@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
-const origin = process.env.TEST_ORIGIN || 'http://localhost:3000';
+const origin = process.env.TEST_ORIGIN || 'http://127.0.0.1:4313';
 const credentials = readFileSync(
   new URL('../.local/admin-access.txt', import.meta.url),
   'utf8',

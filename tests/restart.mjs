@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFileSync, writeFileSync, unlinkSync } from 'node:fs';
-const origin = 'http://localhost:3000';
+const origin = process.env.TEST_ORIGIN || 'http://127.0.0.1:4313';
 const password = readFileSync('.local/admin-access.txt', 'utf8').match(
   /Mật khẩu: (.+)/,
 )[1];
