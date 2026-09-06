@@ -123,6 +123,7 @@ export function brandOf(device: string) {
   return '';
 }
 export function displayName(name: string) {
+  const clean = name.replace(/\.+$/, '').trim();
   const names: Record<string, string> = {
     'Custom Roms': 'ROM tùy biến',
     'Super Flashers': 'Super Flashers',
@@ -135,7 +136,7 @@ export function displayName(name: string) {
     EDL: 'Cứu máy / EDL',
     Recovery: 'Recovery / OFOX',
   };
-  return names[name] || name.replace(/^Oneplus/i, 'OnePlus');
+  return names[clean] || names[name] || clean.replace(/^Oneplus/i, 'OnePlus');
 }
 export function formatBytes(n?: number) {
   if (n == null || !Number.isFinite(n)) return 'Chưa có dữ liệu';

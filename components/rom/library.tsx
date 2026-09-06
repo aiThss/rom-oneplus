@@ -19,6 +19,8 @@ import {
   X,
   FileText,
   Heart,
+  Send,
+  Check,
 } from 'lucide-react';
 import { Shell } from './shell';
 import {
@@ -126,10 +128,7 @@ function Heading({
     <div className="page-heading">
       <div>
         <div className="eyebrow">{eyebrow}</div>
-        <h1>
-          {title}
-          <span>.</span>
-        </h1>
+        <h1>{title}</h1>
         <p>{description}</p>
       </div>
       {extra}
@@ -359,7 +358,7 @@ function ArchiveView({ view, path }: { view: string; path: string }) {
                                 : 'CÔNG CỤ'}
                         </span>
                         <h3>{displayName(entry.name)}</h3>
-                        <p>{entry.description || 'Xem phần mềm'}</p>
+                        <p>{entry.description || 'Xem thư mục'}</p>
                       </div>
                       <ArrowUpRight size={19} />
                     </a>
@@ -384,12 +383,12 @@ function ArchiveView({ view, path }: { view: string; path: string }) {
           {!entries.length && (
             <EmptyState
               title={
-                query ? 'Không tìm thấy kết quả' : 'Danh mục chưa có phần mềm'
+                query ? 'Không tìm thấy kết quả' : 'Phần mềm chưa được thêm vào'
               }
               description={
                 query
                   ? 'Thử tên thiết bị, phiên bản hoặc từ khóa ngắn hơn.'
-                  : 'Chưa có mục phù hợp với các bộ lọc hiện tại.'
+                  : 'Chưa có kết quả phù hợp với các bộ lọc hiện tại.'
               }
             />
           )}
@@ -397,7 +396,7 @@ function ArchiveView({ view, path }: { view: string; path: string }) {
             <details className="technical-note">
               <summary>
                 <ShieldCheck size={17} />
-                Ghi chú kỹ thuật từ nguồn
+                Lưu ý kỹ thuật quan trọng
               </summary>
               <ul>
                 {data.notes.map((n, i) => (
@@ -409,7 +408,7 @@ function ArchiveView({ view, path }: { view: string; path: string }) {
           {!path && !query && data?.latest.length ? (
             <>
               <div className="section-title">
-                <h2>Mới trên kho nguồn</h2>
+                <h2>Những cập nhật mới...</h2>
                 <span>Bản cập nhật gần đây</span>
               </div>
               <div className="file-list">
@@ -484,6 +483,45 @@ type Change = {
   updatedAt: number;
   error?: string;
 };
+function TelegramMirrorButton({ url }: { url: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleMirror = async () => {
+    const text = `/m ${url}`;
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const input = document.createElement('textarea');
+        input.value = text;
+        input.style.position = 'fixed';
+        input.style.opacity = '0';
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand('copy');
+        document.body.removeChild(input);
+      }
+    } catch {
+      // ignore
+    }
+    setCopied(true);
+    window.open('https://t.me/jinmups_vn', '_blank', 'noopener,noreferrer');
+    setTimeout(() => setCopied(false), 2500);
+  };
+
+  return (
+    <Button
+      variant="outline"
+      className="action secondary-action"
+      onClick={handleMirror}
+      title="Sao chép cú pháp /m và mở nhóm Telegram để tạo mirror Google Drive"
+    >
+      {copied ? <Check size={15} /> : <Send size={15} />}
+      {copied ? 'Đã chép lệnh mirror' : 'Mirror Google Drive'}
+    </Button>
+  );
+}
+
 export function EntrySheet({
   entry,
   onClose,
@@ -633,6 +671,11 @@ export function EntrySheet({
                             ? 'Mở công cụ OTA'
                             : 'Mở trang phát hành'}
                         </External>
+                      )}
+                      {(value.downloadUrl || value.sourceUrl) && (
+                        <TelegramMirrorButton
+                          url={value.downloadUrl || value.sourceUrl}
+                        />
                       )}
                     </div>
                     {value.source === 'ota' && (

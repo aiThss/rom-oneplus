@@ -16,6 +16,7 @@ import {
   Moon,
   Sun,
   ArrowUpRight,
+  Menu,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -147,9 +148,11 @@ export function Shell({
             <SidebarTrigger
               className="mobile-menu"
               aria-label="Mở điều hướng"
-            />
+            >
+              <Menu size={20} />
+            </SidebarTrigger>
             <span className="topbar-label">
-              {admin ? 'Không gian quản trị' : 'Một nơi cho thiết bị của bạn'}
+              {admin ? 'Không gian quản trị' : 'Kho phần mềm & firmware'}
             </span>
           </div>
           <div className="topbar-actions">
