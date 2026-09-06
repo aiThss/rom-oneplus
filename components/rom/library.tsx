@@ -89,7 +89,7 @@ export function Library() {
     <Shell
       active={loc.view}
       {...config}
-      donate={config.donate.enabled}
+      donate={config.donate?.enabled ?? true}
       groups={config.groups}
     >
       <>
@@ -1097,7 +1097,6 @@ function ChangelogView() {
 }
 function DonateView({ config }: { config: Settings }) {
   const d = config.donate;
-  if (!d.enabled) return <EmptyState title="Mục ủng hộ chưa được bật" />;
   return (
     <>
       <Heading
@@ -1107,8 +1106,14 @@ function DonateView({ config }: { config: Settings }) {
       />
       <div className="panel donate-card">
         <Heart size={30} />
-        <Markdown content={d.text} className="preserve-text" />
-        {d.qr && <img className="donate-qr" src={d.qr} alt="Mã QR ủng hộ" />}
+        <Markdown
+          content={
+            d?.text ||
+            'Mọi sự ủng hộ của bạn là nguồn động lực lớn để duy trì máy chủ tải tốc độ cao và phát triển kho lưu trữ ROM OnePlus cho cộng đồng.'
+          }
+          className="preserve-text"
+        />
+        {d?.qr && <img className="donate-qr" src={d.qr} alt="Mã QR ủng hộ" />}
         <dl className="bank-details">
           {[
             [d.bank, 'Ngân hàng'],

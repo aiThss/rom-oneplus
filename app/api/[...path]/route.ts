@@ -80,7 +80,9 @@ export async function GET(req: Request) {
       const config = await settings();
       return json({
         ...config,
-        donate: config.donate.enabled ? config.donate : defaultSettings.donate,
+        donate: config.donate?.enabled
+          ? config.donate
+          : { ...defaultSettings.donate, ...(config.donate || {}), enabled: true },
       });
     }
     if (route === 'auth')

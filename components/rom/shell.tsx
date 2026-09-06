@@ -42,7 +42,7 @@ export function Shell({
   accent,
   sections,
   groups = [],
-  donate = false,
+  donate = true,
   admin = false,
 }: {
   children: ReactNode;
@@ -106,6 +106,15 @@ export function Shell({
                   </a>
                 ),
             )}
+            {donate && (
+              <a
+                className={`nav-link ${active === 'donate' && !admin ? 'active' : ''}`}
+                href="/?view=donate"
+              >
+                <Heart size={18} />
+                Ủng hộ
+              </a>
+            )}
           </nav>
           {groups.length > 0 && (
             <>
@@ -123,12 +132,6 @@ export function Shell({
                 </a>
               ))}
             </>
-          )}
-          {donate && (
-            <a className="nav-link" href="/?view=donate">
-              <Heart size={18} />
-              Ủng hộ
-            </a>
           )}
         </SidebarContent>
         <SidebarFooter className="nav-footer">

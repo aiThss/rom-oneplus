@@ -87,8 +87,8 @@ export const defaultSettings: Settings = {
   ),
   groups: [],
   donate: {
-    enabled: false,
-    text: '',
+    enabled: true,
+    text: 'Mọi sự ủng hộ của bạn là nguồn động lực lớn để duy trì máy chủ tải và phát triển kho ROM cho cộng đồng.',
     bank: '',
     account: '',
     holder: '',
