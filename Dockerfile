@@ -34,12 +34,11 @@ ENV NODE_ENV=production \
     HOST=0.0.0.0 \
     DATA_DIR=/app/data
 
-# Sao chép các artifact và thư viện đã build từ builder.
-# Các file ứng dụng chỉ cần quyền đọc khi chạy bằng user node, vì vậy không
-# chown toàn bộ /app (đặc biệt node_modules) để tránh tạo một Docker layer rất lớn.
+# Sao chép artifact và thư viện cần thiết khi chạy production.
 COPY --from=builder /app/package.json /app/package-lock.json ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/public ./public
 COPY --from=builder /app/runtime ./runtime
 COPY --from=builder /app/drizzle ./drizzle
 

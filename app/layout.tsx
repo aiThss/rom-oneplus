@@ -1,19 +1,15 @@
 import type { Metadata } from 'next';
 import './globals.css';
 
-const faviconPng = '/favicon-oneplus-vietnam-20260907.png';
-const faviconIco = '/favicon-oneplus-vietnam-20260907.ico';
+const faviconPng = '/favicon-oneplus-vietnam-v3.png';
 
 export const metadata: Metadata = {
   title: 'Kho ROM Việt — ROM, firmware & recovery',
   description:
     'Tra cứu ROM, firmware, OrangeFox Recovery và OTA. Ưu tiên OnePlus, giao diện tiếng Việt.',
   icons: {
-    icon: [
-      { url: faviconPng, type: 'image/png', sizes: '256x256' },
-      { url: faviconIco, type: 'image/x-icon' },
-    ],
-    shortcut: faviconIco,
+    icon: [{ url: faviconPng, type: 'image/png', sizes: '64x64' }],
+    shortcut: faviconPng,
     apple: faviconPng,
   },
 };
@@ -24,9 +20,8 @@ export default function RootLayout({
   return (
     <html lang="vi" suppressHydrationWarning>
       <head>
-        {/* Unique favicon filenames intentionally bust Chrome/Android's aggressive favicon cache. */}
-        <link rel="icon" href={faviconPng} type="image/png" sizes="256x256" />
-        <link rel="shortcut icon" href={faviconIco} type="image/x-icon" />
+        <link rel="icon" href={faviconPng} type="image/png" sizes="64x64" />
+        <link rel="shortcut icon" href={faviconPng} type="image/png" />
         <link rel="apple-touch-icon" href={faviconPng} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
