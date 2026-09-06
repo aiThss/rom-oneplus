@@ -5,13 +5,9 @@ export const metadata: Metadata = {
   description:
     'Tra cứu ROM, firmware, OrangeFox Recovery và OTA. Ưu tiên OnePlus, giao diện tiếng Việt.',
   icons: {
-    icon: [
-      { url: '/favicon.svg', type: 'image/svg+xml' },
-      { url: '/icon.png', type: 'image/png' },
-      { url: '/favicon.ico' },
-    ],
-    shortcut: '/favicon.svg',
-    apple: '/icon.png',
+    icon: [{ url: '/logo.svg', type: 'image/svg+xml' }],
+    shortcut: '/logo.svg',
+    apple: '/logo.svg',
   },
 };
 export default function RootLayout({
@@ -20,9 +16,9 @@ export default function RootLayout({
   return (
     <html lang="vi" suppressHydrationWarning>
       <head>
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-        <link rel="icon" href="/icon.png" type="image/png" />
-        <link rel="apple-touch-icon" href="/icon.png" />
+        <link rel="icon" href="/logo.svg" type="image/svg+xml" />
+        <link rel="shortcut icon" href="/logo.svg" type="image/svg+xml" />
+        <link rel="apple-touch-icon" href="/logo.svg" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
           rel="preconnect"
