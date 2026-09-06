@@ -5,7 +5,6 @@
 /* eslint-disable nextjs/no-html-link-for-pages, nextjs/no-img-element */
 import { useEffect, useState, type ReactNode } from 'react';
 import {
-  HardDrive,
   Grid2X2,
   ShieldCheck,
   Layers3,

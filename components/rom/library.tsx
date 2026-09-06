@@ -21,6 +21,7 @@ import {
   Heart,
   Send,
   Check,
+  TriangleAlert,
 } from 'lucide-react';
 import { Shell } from './shell';
 import {
@@ -34,6 +35,7 @@ import {
   SelectField,
   SearchPicker,
   timeLabel,
+  Markdown,
 } from './common';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -65,6 +67,10 @@ function locationState() {
 }
 function browse(view: string, path = '') {
   return `/?view=${view}${path ? '&path=' + encodeURIComponent(path) : ''}`;
+}
+function isArb(text?: string | null): boolean {
+  if (!text) return false;
+  return /\barb\b|anti-rollback/i.test(text);
 }
 export function Library() {
   const [loc, setLoc] = useState({ view: 'archive', path: '' });
@@ -395,12 +401,25 @@ function ArchiveView({ view, path }: { view: string; path: string }) {
           {data?.notes.length ? (
             <details className="technical-note">
               <summary>
-                <ShieldCheck size={17} />
+                {data.notes.some(isArb) ? (
+                  <TriangleAlert size={17} className="arb-icon" />
+                ) : (
+                  <ShieldCheck size={17} />
+                )}
                 Lưu ý kỹ thuật quan trọng
               </summary>
               <ul>
                 {data.notes.map((n, i) => (
-                  <li key={i}>{n}</li>
+                  <li key={i} className={isArb(n) ? 'arb-text' : ''}>
+                    {isArb(n) ? (
+                      <span className="arb-tag">
+                        <TriangleAlert size={12} />
+                        <strong>{n} (Cảnh báo chống hạ cấp ARB)</strong>
+                      </span>
+                    ) : (
+                      n
+                    )}
+                  </li>
                 ))}
               </ul>
             </details>
@@ -452,6 +471,12 @@ export function FileRow({
         <span className="meta">
           {displayName(entry.device || entry.parent || 'PHẦN MỀM')}
           {entry.region ? ' · ' + entry.region : ''}
+          {entry.notes?.filter(isArb).map((note, i) => (
+            <span key={i} className="arb-tag">
+              <TriangleAlert size={11} />
+              <strong>{note}</strong>
+            </span>
+          ))}
         </span>
         <h3>{entry.name}</h3>
         {!compact && (
@@ -491,15 +516,6 @@ function TelegramMirrorButton({ url }: { url: string }) {
     try {
       if (navigator?.clipboard?.writeText) {
         await navigator.clipboard.writeText(text);
-      } else {
-        const input = document.createElement('textarea');
-        input.value = text;
-        input.style.position = 'fixed';
-        input.style.opacity = '0';
-        document.body.appendChild(input);
-        input.select();
-        document.execCommand('copy');
-        document.body.removeChild(input);
       }
     } catch {
       // ignore
@@ -568,6 +584,12 @@ export function EntrySheet({
               <SheetDescription>
                 {displayName(value.device || 'Phần mềm')}{' '}
                 {value.region && '· ' + value.region}
+                {value.notes?.filter(isArb).map((note, i) => (
+                  <span key={i} className="arb-tag arb-tag-large">
+                    <TriangleAlert size={12} />
+                    <strong>{note}</strong>
+                  </span>
+                ))}
               </SheetDescription>
             </SheetHeader>
             <div className="sheet-body">
@@ -610,7 +632,7 @@ export function EntrySheet({
                     )}
                   </div>
                   {value.description && (
-                    <p className="preserve-text">{value.description}</p>
+                    <Markdown content={value.description} className="preserve-text" />
                   )}
                   <div className="checksum">
                     <span className="field-label">
@@ -634,13 +656,38 @@ export function EntrySheet({
                     <p className="field-error">{detail.error}</p>
                   )}
                   {value.notes?.length ? (
-                    <div className="notice">
-                      <ShieldCheck size={18} />
-                      <div>
-                        {value.notes.map((n, i) => (
-                          <p key={i}>{n}</p>
-                        ))}
-                      </div>
+                    <div className="notes-container">
+                      {value.notes.map((n, i) => {
+                        const arb = isArb(n);
+                        return (
+                          <div
+                            key={i}
+                            className={`notice ${arb ? 'arb-notice' : ''}`}
+                          >
+                            {arb ? (
+                              <TriangleAlert size={20} className="arb-icon" />
+                            ) : (
+                              <ShieldCheck size={18} />
+                            )}
+                            <div>
+                              <p className={arb ? 'arb-text' : ''}>
+                                {arb ? (
+                                  <strong>
+                                    {n} (Cảnh báo chống hạ cấp Anti-Rollback)
+                                  </strong>
+                                ) : (
+                                  n
+                                )}
+                              </p>
+                              {arb && (
+                                <p className="arb-warning-sub">
+                                  Hạ cấp xuống bản có chỉ số ARB thấp hơn có thể làm máy mất nguồn / hard brick hoàn toàn!
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   ) : null}
                   <div className="download-box">
@@ -730,9 +777,13 @@ export function EntrySheet({
                         <p className="field-error">{changes.data.error}</p>
                       )}
                       <div className="changelog-text">
-                        {(!original && changes.data.vi) ||
-                          changes.data.original ||
-                          'Bản phát hành này chưa có nội dung changelog. Khi nguồn có liên kết, bạn có thể mở bản gốc ở trên.'}
+                        <Markdown
+                          content={
+                            (!original && changes.data.vi) ||
+                            changes.data.original ||
+                            'Bản phát hành này chưa có nội dung changelog. Khi nguồn có liên kết, bạn có thể mở bản gốc ở trên.'
+                          }
+                        />
                       </div>
                     </>
                   ) : null}
@@ -1029,7 +1080,7 @@ function ChangelogView() {
                 {new Date(l.date + 'T00:00:00').toLocaleDateString('vi-VN')}
               </time>
               <h2>{l.title}</h2>
-              <p className="preserve-text">{l.body}</p>
+              <Markdown content={l.body} className="preserve-text" />
             </article>
           ))}
         </div>
@@ -1054,7 +1105,7 @@ function DonateView({ config }: { config: Settings }) {
       />
       <div className="panel donate-card">
         <Heart size={30} />
-        <p className="preserve-text">{d.text}</p>
+        <Markdown content={d.text} className="preserve-text" />
         {d.qr && <img className="donate-qr" src={d.qr} alt="Mã QR ủng hộ" />}
         <dl className="bank-details">
           {[
