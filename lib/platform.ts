@@ -1,10 +1,17 @@
-import { env } from 'cloudflare:workers';
-import type { Platform } from './platform-types';
-// The Node/Docker build replaces this module through a Vite alias.
+import { openDatabase, databaseAdapter, fileAdapter, publicOrigin } from '../runtime/storage.mjs';
+import type { Platform, Query } from './platform-types';
+
+let database: ReturnType<typeof databaseAdapter> | undefined;
+
 export const platform: Platform = {
-  db: { prepare: (sql) => env.DB.prepare(sql) },
-  files: {
-    get: (key) => env.FILES.get(key),
-    put: (key, bytes, options) => env.FILES.put(key, bytes, options),
+  db: {
+    prepare(sql: string) {
+      database ||= databaseAdapter(openDatabase());
+      return database.prepare(sql) as Query;
+    },
+  },
+  files: fileAdapter(),
+  get publicOrigin() {
+    return publicOrigin();
   },
 };

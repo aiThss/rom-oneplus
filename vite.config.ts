@@ -58,13 +58,18 @@ export default defineConfig(async () => {
 
   return {
     css: { postcss: { plugins: [tailwindcss()] } },
+    build: {
+      rollupOptions: {
+        external: ['cloudflare:workers'],
+      },
+    },
     resolve: {
       alias: isNodeTarget
         ? [
             {
               find: '@/lib/platform',
               replacement: fileURLToPath(
-                new URL('./runtime/platform-node.ts', import.meta.url),
+                new URL('./lib/platform.ts', import.meta.url),
               ),
             },
           ]

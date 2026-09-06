@@ -1,4 +1,4 @@
-﻿# ==========================================
+# ==========================================
 # 1. Build Stage
 # ==========================================
 FROM node:22-alpine AS builder
@@ -15,6 +15,7 @@ COPY . .
 # Build dự án cho môi trường Node độc lập (không Cloudflare Workers)
 ENV NODE_ENV=production
 ENV TARGET=node
+ENV PUBLIC_ORIGIN=http://127.0.0.1:3000
 RUN npx vinext build
 
 # ==========================================
