@@ -82,13 +82,7 @@ export function Shell({
       <Sidebar variant="inset" className="rom-sidebar">
         <SidebarHeader className="brand-header">
           <a href="/" className="brand">
-            {logo ? (
-              <img src={logo} alt="" className="brand-logo" />
-            ) : (
-              <span className="brand-mark">
-                <HardDrive size={23} />
-              </span>
-            )}
+            <img src={logo || '/logo.png'} alt="" className="brand-logo" />
             <span>
               {name}
               <small>PHẦN MỀM & FIRMWARE</small>
