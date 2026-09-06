@@ -85,12 +85,12 @@ export function Shell({
             <img src={logo || '/logo.png'} alt="" className="brand-logo" />
             <span>
               {name}
-              <small>PHẦN MỀM & FIRMWARE</small>
+              <small>Phần mềm & firmware</small>
             </span>
           </a>
         </SidebarHeader>
         <SidebarContent className="nav-content">
-          <div className="nav-label">THƯ VIỆN</div>
+          <div className="nav-label">Thư viện</div>
           <nav>
             {links.map(
               (n) =>
@@ -100,7 +100,7 @@ export function Shell({
                     className={`nav-link ${active === n.id && !admin ? 'active' : ''}`}
                     href={`/?view=${n.id}`}
                   >
-                    <n.icon size={19} />
+                    <n.icon size={18} />
                     {n.label}
                     {n.id === 'stats' && <span className="status-dot" />}
                   </a>
@@ -109,7 +109,7 @@ export function Shell({
           </nav>
           {groups.length > 0 && (
             <>
-              <div className="nav-label spaced">CỘNG ĐỒNG</div>
+              <div className="nav-label spaced">Cộng đồng</div>
               {groups.map((g, i) => (
                 <a
                   className="nav-link"
@@ -119,14 +119,14 @@ export function Shell({
                   key={i}
                 >
                   {g.name}
-                  <ArrowUpRight size={16} />
+                  <ArrowUpRight size={15} />
                 </a>
               ))}
             </>
           )}
           {donate && (
             <a className="nav-link" href="/?view=donate">
-              <Heart size={19} />
+              <Heart size={18} />
               Ủng hộ
             </a>
           )}
@@ -137,7 +137,7 @@ export function Shell({
           </div>
           <p>File tải từ máy chủ nguồn.</p>
           <a href="/admin" className={`admin-link ${admin ? 'text-link' : ''}`}>
-            <ShieldCheck size={15} /> Quản trị
+            <ShieldCheck size={16} /> Quản trị
           </a>
         </SidebarFooter>
       </Sidebar>

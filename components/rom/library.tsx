@@ -242,7 +242,7 @@ function ArchiveView({ view, path }: { view: string; path: string }) {
     <>
       <Heading
         eyebrow={
-          view === 'mirrors' ? 'SOURCEFORGE MIRRORS' : 'THƯ VIỆN PHẦN MỀM'
+          view === 'mirrors' ? 'SourceForge Mirrors' : 'Thư viện phần mềm'
         }
         title={title}
         description={
@@ -251,7 +251,7 @@ function ArchiveView({ view, path }: { view: string; path: string }) {
               ' · Chọn thư mục hoặc bản phần mềm cần tải.'
             : view === 'mirrors'
               ? 'Các bản lưu trữ và gói tải bổ sung từ SourceForge.'
-              : 'ROM, firmware và recovery. Tất cả ở một nơi.'
+              : 'Kho lưu trữ ROM tùy biến, firmware gốc, recovery và công cụ cứu máy.'
         }
         extra={
           <span className="subtle-pill">
@@ -351,22 +351,24 @@ function ArchiveView({ view, path }: { view: string; path: string }) {
                       key={entry.id}
                     >
                       <div className={`device-symbol tone-${i % 3}`}>
-                        <Icon size={28} />
+                        <Icon size={22} />
                       </div>
-                      <div>
+                      <div className="device-info">
                         <span className="meta">
                           {path
-                            ? 'THƯ MỤC'
+                            ? 'Thư mục'
                             : /pad/i.test(entry.name)
-                              ? 'MÁY TÍNH BẢNG'
+                              ? 'Máy tính bảng'
                               : /oneplus|oppo|realme/i.test(entry.name)
-                                ? 'ĐIỆN THOẠI'
-                                : 'CÔNG CỤ'}
+                                ? 'Điện thoại'
+                                : 'Công cụ'}
                         </span>
                         <h3>{displayName(entry.name)}</h3>
-                        <p>{entry.description || 'Xem thư mục'}</p>
+                        <p>{entry.description || 'Xem phần mềm'}</p>
                       </div>
-                      <ArrowUpRight size={19} />
+                      <div className="device-arrow">
+                        <ArrowUpRight size={17} />
+                      </div>
                     </a>
                   );
                 })}
@@ -462,14 +464,14 @@ export function FileRow({
     <article className="panel file-row">
       <div className="file-icon">
         {entry.kind === 'link' ? (
-          <FileText size={21} />
+          <FileText size={18} />
         ) : (
-          <Download size={21} />
+          <Download size={18} />
         )}
       </div>
       <button className="file-title grow" onClick={() => onSelect(entry)}>
         <span className="meta">
-          {displayName(entry.device || entry.parent || 'PHẦN MỀM')}
+          {displayName(entry.device || entry.parent || 'Thiết bị')}
           {entry.region ? ' · ' + entry.region : ''}
           {entry.notes?.filter(isArb).map((note, i) => (
             <span key={i} className="arb-tag">
@@ -478,7 +480,7 @@ export function FileRow({
             </span>
           ))}
         </span>
-        <h3>{entry.name}</h3>
+        <h3 className="file-name-mono">{entry.name}</h3>
         {!compact && (
           <p>
             {entry.size
@@ -495,7 +497,7 @@ export function FileRow({
           onClick={() => onSelect(entry)}
         >
           Chi tiết
-          <ChevronRight size={15} />
+          <ChevronRight size={14} />
         </Button>
       </div>
     </article>
