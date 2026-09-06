@@ -34,15 +34,17 @@ ENV NODE_ENV=production \
     HOST=0.0.0.0 \
     DATA_DIR=/app/data
 
-# Sao chép các artifact và thư viện đã build từ builder
+# Sao chép các artifact và thư viện đã build từ builder.
+# Các file ứng dụng chỉ cần quyền đọc khi chạy bằng user node, vì vậy không
+# chown toàn bộ /app (đặc biệt node_modules) để tránh tạo một Docker layer rất lớn.
 COPY --from=builder /app/package.json /app/package-lock.json ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/runtime ./runtime
 COPY --from=builder /app/drizzle ./drizzle
 
-# Tạo thư mục dữ liệu SQLite + file uploads và phân quyền cho user node
-RUN mkdir -p /app/data && chown -R node:node /app
+# Chỉ thư mục dữ liệu SQLite/uploads cần quyền ghi bởi user node.
+RUN mkdir -p /app/data && chown node:node /app/data
 
 USER node
 
