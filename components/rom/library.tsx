@@ -340,6 +340,37 @@ function ArchiveView({ view, path }: { view: string; path: string }) {
           ))}
         </nav>
       )}
+      {technicalNotes.length ? (
+        <details className="technical-note">
+          <summary>
+            {technicalNotes.some(isArb) ? (
+              <TriangleAlert size={17} className="arb-icon" />
+            ) : (
+              <ShieldCheck size={17} />
+            )}
+            <span>Lưu ý kỹ thuật quan trọng phải đọc</span>
+            <ChevronDown
+              size={17}
+              className="technical-note-chevron"
+              aria-hidden="true"
+            />
+          </summary>
+          <ul>
+            {technicalNotes.map((n, i) => (
+              <li key={i} className={isArb(n) ? 'arb-text' : ''}>
+                {isArb(n) ? (
+                  <span className="arb-tag">
+                    <TriangleAlert size={12} />
+                    <strong>{n} (Cảnh báo chống hạ cấp ARB)</strong>
+                  </span>
+                ) : (
+                  n
+                )}
+              </li>
+            ))}
+          </ul>
+        </details>
+      ) : null}
       <div className="toolbar">
         <div className="search-box">
           <Search size={19} />
@@ -464,37 +495,6 @@ function ArchiveView({ view, path }: { view: string; path: string }) {
               }
             />
           )}
-          {technicalNotes.length ? (
-            <details className="technical-note">
-              <summary>
-                {technicalNotes.some(isArb) ? (
-                  <TriangleAlert size={17} className="arb-icon" />
-                ) : (
-                  <ShieldCheck size={17} />
-                )}
-                <span>Lưu ý kỹ thuật quan trọng phải đọc</span>
-                <ChevronDown
-                  size={17}
-                  className="technical-note-chevron"
-                  aria-hidden="true"
-                />
-              </summary>
-              <ul>
-                {technicalNotes.map((n, i) => (
-                  <li key={i} className={isArb(n) ? 'arb-text' : ''}>
-                    {isArb(n) ? (
-                      <span className="arb-tag">
-                        <TriangleAlert size={12} />
-                        <strong>{n} (Cảnh báo chống hạ cấp ARB)</strong>
-                      </span>
-                    ) : (
-                      n
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </details>
-          ) : null}
           {!path && !query && data?.latest.length ? (
             <>
               <div className="section-title">
