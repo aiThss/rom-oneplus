@@ -1016,6 +1016,11 @@ textarea {
 .breadcrumbs a:hover {
   color: var(--brand);
 }
+.brand-back a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
 .file-list {
   display: flex;
   flex-direction: column;

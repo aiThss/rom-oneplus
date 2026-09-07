@@ -5,6 +5,7 @@
 /* eslint-disable nextjs/no-html-link-for-pages, nextjs/no-img-element */
 import { useEffect, useMemo, useState } from 'react';
 import {
+  ArrowLeft,
   ArrowUpRight,
   Smartphone,
   Tablet,
@@ -444,6 +445,14 @@ function ArchiveView({
           </div>
         }
       />
+      {brandChoice && !path && view === 'archive' && (
+        <nav className="breadcrumbs brand-back" aria-label="Quay lại chọn hãng">
+          <a href={browse('archive')}>
+            <ArrowLeft size={14} aria-hidden="true" />
+            Chọn hãng điện thoại
+          </a>
+        </nav>
+      )}
       {path && (
         <nav className="breadcrumbs" aria-label="Đường dẫn">
           <a href={browse(view, '', brand)}>
