@@ -64,6 +64,8 @@ import {
 import type { Traffic } from '@/lib/parsers';
 import { deviceSpecFor } from '@/lib/device-specs';
 
+const CHINA_DEVICE_NOTE = 'Mọi thiết bị đến từ China chỉ sử dụng SuperFLasher';
+
 function locationState() {
   if (typeof window === 'undefined') return { view: 'archive', path: '' };
   const p = new URLSearchParams(location.search);
@@ -202,6 +204,12 @@ function ArchiveView({ view, path }: { view: string; path: string }) {
     setKind('all');
   }, [path, view]);
   const data = result.data?.data;
+  const deviceRoot = path.split('/')[0];
+  const sourceNotes = data?.notes ?? [];
+  const technicalNotes =
+    path && deviceSpecFor(deviceRoot) && !sourceNotes.includes(CHINA_DEVICE_NOTE)
+      ? [CHINA_DEVICE_NOTE, ...sourceNotes]
+      : sourceNotes;
   const entries = useMemo(() => {
     let list = (data?.entries || []).filter(
       (e) =>
@@ -443,10 +451,10 @@ function ArchiveView({ view, path }: { view: string; path: string }) {
               }
             />
           )}
-          {data?.notes.length ? (
+          {technicalNotes.length ? (
             <details className="technical-note">
               <summary>
-                {data.notes.some(isArb) ? (
+                {technicalNotes.some(isArb) ? (
                   <TriangleAlert size={17} className="arb-icon" />
                 ) : (
                   <ShieldCheck size={17} />
@@ -454,7 +462,7 @@ function ArchiveView({ view, path }: { view: string; path: string }) {
                 Lưu ý kỹ thuật quan trọng
               </summary>
               <ul>
-                {data.notes.map((n, i) => (
+                {technicalNotes.map((n, i) => (
                   <li key={i} className={isArb(n) ? 'arb-text' : ''}>
                     {isArb(n) ? (
                       <span className="arb-tag">
