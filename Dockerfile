@@ -16,7 +16,8 @@ COPY . .
 ENV NODE_ENV=production
 ENV TARGET=node
 ENV PUBLIC_ORIGIN=http://127.0.0.1:3000
-RUN npx vinext build
+# Never carry a compiled bundle across a reused builder layer.
+RUN rm -rf dist && npx vinext build
 
 # ==========================================
 # 2. Production Runner Stage
