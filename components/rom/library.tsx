@@ -66,6 +66,19 @@ import { deviceSpecFor } from '@/lib/device-specs';
 
 const CHINA_DEVICE_NOTE = 'Mọi thiết bị đến từ China chỉ sử dụng SuperFLasher';
 
+function translateTechnicalNote(note: string) {
+  const translations: Record<string, string> = {
+    'CN devices: use Super Flashers.': CHINA_DEVICE_NOTE,
+    'Other regions: use Regional Flashers.':
+      'Các khu vực khác: sử dụng Regional Flasher.',
+    'Custom ROMs work on both variants.':
+      'ROM tùy biến hoạt động trên cả hai biến thể.',
+    'Hybrid builds can also be flashed with OrangeFox Recovery.':
+      'Bản Hybrid cũng có thể được flash bằng OrangeFox Recovery.',
+  };
+  return translations[note.trim()] || note;
+}
+
 function locationState() {
   if (typeof window === 'undefined') return { view: 'archive', path: '' };
   const p = new URLSearchParams(location.search);
@@ -205,7 +218,7 @@ function ArchiveView({ view, path }: { view: string; path: string }) {
   }, [path, view]);
   const data = result.data?.data;
   const deviceRoot = path.split('/')[0];
-  const sourceNotes = data?.notes ?? [];
+  const sourceNotes = (data?.notes ?? []).map(translateTechnicalNote);
   const technicalNotes =
     path && deviceSpecFor(deviceRoot) && !sourceNotes.includes(CHINA_DEVICE_NOTE)
       ? [CHINA_DEVICE_NOTE, ...sourceNotes]
@@ -459,7 +472,12 @@ function ArchiveView({ view, path }: { view: string; path: string }) {
                 ) : (
                   <ShieldCheck size={17} />
                 )}
-                Lưu ý kỹ thuật quan trọng
+                <span>Lưu ý kỹ thuật quan trọng phải đọc</span>
+                <ChevronDown
+                  size={17}
+                  className="technical-note-chevron"
+                  aria-hidden="true"
+                />
               </summary>
               <ul>
                 {technicalNotes.map((n, i) => (

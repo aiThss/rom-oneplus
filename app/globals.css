@@ -1069,6 +1069,16 @@ textarea {
   cursor: pointer;
   font-weight: 600;
 }
+.technical-note summary::-webkit-details-marker {
+  display: none;
+}
+.technical-note-chevron {
+  margin-left: auto;
+  transition: transform 0.2s ease;
+}
+.technical-note[open] .technical-note-chevron {
+  transform: rotate(180deg);
+}
 .technical-note ul {
   padding-left: 20px;
   margin-top: 15px;
