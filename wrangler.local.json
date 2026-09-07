@@ -2,6 +2,9 @@
   "name": "kho-rom-viet-local",
   "compatibility_date": "2026-05-15",
   "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "PUBLIC_ORIGIN": "http://127.0.0.1:4313"
+  },
   "d1_databases": [
     {
       "binding": "DB",

@@ -24,7 +24,12 @@ function obj(v: unknown): Record<string, unknown> {
 export function url(v: unknown, asset = false) {
   const value = str(v, 2000);
   if (!value) return '';
-  if (asset && /^\/api\/assets\/[a-f0-9-]+\.(png|jpg|webp)$/.test(value))
+  if (
+    asset &&
+    (/^\/api\/assets\/[a-f0-9-]+\.(png|jpg|webp)$/.test(value) ||
+      /^\/[a-zA-Z0-9][a-zA-Z0-9._/-]*\.(png|jpg|webp)$/.test(value)) &&
+    !value.includes('..')
+  )
     return value;
   const good = safeLink(value, 'https://invalid.local');
   if (!good || new URL(good).hostname === 'invalid.local')

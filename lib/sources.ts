@@ -18,6 +18,8 @@ import {
   archiveUrl,
   sfUrl,
   normalizedPath,
+  parseZipBrowser,
+  zipBrowserUrl,
   type Traffic,
 } from './parsers';
 import { db, settings, overrides, customs, applyOverrides } from './store';
@@ -42,14 +44,32 @@ export function permittedMetadataUrl(raw: string) {
       u.pathname === '/api/outbound-server2.json'
     )
       return u;
-    if (
-      u.pathname === '/index.php' &&
-      !u.searchParams.has('action') &&
-      !u.searchParams.has('zip') &&
-      (!u.searchParams.has('view') ||
-        ['md5', 'changelog'].includes(u.searchParams.get('view')!))
-    )
-      return u;
+    if (u.pathname === '/index.php' && !u.searchParams.has('action')) {
+      const keys = [...u.searchParams.keys()];
+      if (u.searchParams.has('zip')) {
+        const dir = u.searchParams.get('dir') || '';
+        const zip = u.searchParams.get('zip') || '';
+        if (
+          keys.length <= 2 &&
+          new Set(keys).size === keys.length &&
+          keys.every((key) => ['dir', 'zip'].includes(key)) &&
+          zip.toLowerCase().endsWith('.zip')
+        ) {
+          try {
+            normalizedPath(dir);
+            normalizedPath(zip);
+            return u;
+          } catch {
+            /* Fall through to the unsupported-source error. */
+          }
+        }
+      } else if (
+        (!u.searchParams.has('view') ||
+          ['md5', 'changelog'].includes(u.searchParams.get('view')!))
+      ) {
+        return u;
+      }
+    }
   }
   if (
     u.hostname === 'sourceforge.net' &&
@@ -373,6 +393,33 @@ export async function entryDetails(id: string) {
   }
   return entry;
 }
+
+const zipRunning = new Map<string, Promise<ReturnType<typeof parseZipBrowser>>>();
+
+export async function zipBrowser(id: string) {
+  const existing = zipRunning.get(id);
+  if (existing) return existing;
+  const job = (async () => {
+    const entry = await findEntry(id);
+    if (
+      !entry ||
+      entry.source !== 'archive' ||
+      entry.kind !== 'file' ||
+      !visibleEntry(entry, await settings())
+    )
+      throw new Error('Không tìm thấy trình duyệt ZIP cho bản phát hành này.');
+    const sourceUrl = zipBrowserUrl(entry.parent, entry.name);
+    const response = await fetchMetadata(sourceUrl);
+    return parseZipBrowser(response.text, entry.id, sourceUrl);
+  })();
+  zipRunning.set(id, job);
+  try {
+    return await job;
+  } finally {
+    zipRunning.delete(id);
+  }
+}
+
 export async function changelog(id: string) {
   const entry = await findEntry(id);
   if (!entry || !visibleEntry(entry, await settings()))

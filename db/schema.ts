@@ -27,3 +27,8 @@ export const throttle = sqliteTable('login_throttle', {
   attempts: integer('attempts').notNull(),
   until: integer('until').notNull(),
 });
+export const throttleBuckets = sqliteTable('login_throttle_bucket', {
+  bucket: text('bucket').primaryKey(),
+  attempts: integer('attempts').notNull(),
+  until: integer('until').notNull(),
+});

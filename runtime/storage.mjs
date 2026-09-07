@@ -52,7 +52,7 @@ export function provisionAdmin(database, { reset = false } = {}) {
   database.exec('BEGIN IMMEDIATE');
   try {
     database.prepare("INSERT INTO admin(id,username,salt,hash) VALUES(1,?,?,?) ON CONFLICT(id) DO UPDATE SET username=excluded.username,salt=excluded.salt,hash=excluded.hash").run(username, salt, hash);
-    database.exec('DELETE FROM sessions; DELETE FROM login_throttle; COMMIT;');
+    database.exec('DELETE FROM sessions; DELETE FROM login_throttle; DELETE FROM login_throttle_bucket; COMMIT;');
   } catch (error) { database.exec('ROLLBACK'); throw error; }
   return true;
 }

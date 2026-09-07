@@ -7,8 +7,10 @@ import {
   parseMd5,
   parseChangelog,
   parseTraffic,
+  parseZipBrowser,
   normalizedPath,
   safeLink,
+  safeZipDownload,
   matchMirror,
 } from '../lib/parsers.ts';
 import { defaultSettings, visibleEntry, type Entry } from '../lib/model.ts';
@@ -38,6 +40,34 @@ void test('changed HTML or an unverified empty list fails instead of erasing cac
       '<span id="browser"></span><div class="empty-folder">No files found</div>',
     ).entries.length,
     0,
+  );
+});
+void test('ZIP browser parses nested entries and keeps only verified source downloads', () => {
+  const html = `<section id="zip-browser"><h2 id="zip-inline-title">Build A.zip</h2><div class="zip-browser-summary"><span><strong>2</strong> files</span><span><strong>1</strong> folders</span><span><strong>3</strong> entries</span></div><ul class="zip-tree-root-list"><li>ignored outside the ZIP schema</li><li class="zip-dir"><span class="zip-entry-copy"><strong>images</strong></span><ul><li class="zip-file highlight"><span class="zip-entry-copy"><strong>boot.img</strong></span><span class="zip-size">96 MB</span><span class="zip-priority-badge">Important image</span><a class="zip-download" href="/index.php?action=download_from_zip&amp;zip=Oneplus+13%2FBuild+A.zip&amp;file=images%2Fboot.img">Download</a></li></ul></li><li class="zip-file"><span class="zip-entry-copy"><strong>README.txt</strong></span><a class="zip-download" href="https://evil.example/file">Download</a></li></ul></section>`;
+  const result = parseZipBrowser(
+    html,
+    'archive:Oneplus 13/Build A.zip',
+    'https://roms.danielspringer.at/index.php?dir=Oneplus+13&zip=Build+A.zip',
+  );
+  assert.equal(result.name, 'Build A.zip');
+  assert.deepEqual(result.summary, { files: 2, folders: 1, entries: 3 });
+  const image = result.entries[0].children?.[0];
+  assert.equal(image?.important, true);
+  assert.equal(image?.sizeLabel, '96 MB');
+  assert.equal(new URL(image!.downloadUrl!).hostname, 'roms.danielspringer.at');
+  assert.equal(result.entries[1].downloadUrl, undefined);
+  assert.equal(
+    safeZipDownload(
+      'https://roms.danielspringer.at/index.php?action=download_from_zip&zip=Build.zip&file=../secret',
+    ),
+    undefined,
+  );
+  assert.throws(() =>
+    parseZipBrowser(
+      '<ul class="zip-tree-root-list"><li class="zip-file"><span class="zip-entry-copy"><strong>outside.txt</strong></span></li></ul>',
+      'archive:Build A.zip',
+      'https://roms.danielspringer.at/index.php?zip=Build+A.zip',
+    ),
   );
 });
 void test('SourceForge metadata is parsed as JSON, never executed', () => {

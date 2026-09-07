@@ -25,14 +25,14 @@ await api('auth/login', { username: 'admin', password });
 const probePath = '.local/restart-proof.json';
 const id = 'resource:orangefox-op13';
 if (process.argv[2] === 'prepare') {
-  const before = await api('admin/data');
+  const before = await api('aiths/data');
   const oldOverride = before.overrides.find((v) => v.id === id);
   const testOverride = {
     ...oldOverride,
     id,
     description: 'Kiểm tra lưu bền vững sau khởi động lại',
   };
-  const saved = await api('admin/log', {
+  const saved = await api('aiths/log', {
     title: 'Kiểm tra khởi động lại',
     date: '2026-09-06',
     body: 'Bản nháp tạm của kiểm thử',
@@ -47,14 +47,14 @@ if (process.argv[2] === 'prepare') {
       log: saved,
     }),
   );
-  await api('admin/settings', before.settings);
-  await api('admin/override', testOverride);
+  await api('aiths/settings', before.settings);
+  await api('aiths/override', testOverride);
   console.log(
     'Prepared private restart probe. Stop server, back up, restart, then run verify.',
   );
 } else if (process.argv[2] === 'verify') {
   const proof = JSON.parse(readFileSync(probePath, 'utf8'));
-  const after = await api('admin/data');
+  const after = await api('aiths/data');
   assert.deepEqual(after.settings, proof.settings);
   assert.deepEqual(
     after.overrides.find((v) => v.id === id),
@@ -64,9 +64,9 @@ if (process.argv[2] === 'prepare') {
     after.logs.find((v) => v.id === proof.log.id),
     proof.log,
   );
-  if (proof.oldOverride) await api('admin/override', proof.oldOverride);
-  else await api('admin/reset-override', { id });
-  await api('admin/delete-log', { id: proof.log.id });
+  if (proof.oldOverride) await api('aiths/override', proof.oldOverride);
+  else await api('aiths/reset-override', { id });
+  await api('aiths/delete-log', { id: proof.log.id });
   unlinkSync(probePath);
   console.log(
     'PASS settings, edited source content, draft journal and credentials survive restart. Probe removed.',

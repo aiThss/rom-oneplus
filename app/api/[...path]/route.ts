@@ -4,6 +4,7 @@ import {
   ota,
   traffic,
   entryDetails,
+  zipBrowser,
   changelog,
   findEntry,
 } from '@/lib/sources';
@@ -45,6 +46,16 @@ function json(
     },
   });
 }
+function safeError(error: unknown, fallback: string) {
+  const message = error instanceof Error ? error.message.trim() : '';
+  if (
+    message &&
+    message.length <= 300 &&
+    !/(https?:\/\/|sqlite|database|node_modules|file:| at )/i.test(message)
+  )
+    return message;
+  return fallback;
+}
 async function readBody(req: Request, maximum: number) {
   const reader = req.body?.getReader();
   if (!reader) return new Uint8Array();
@@ -72,6 +83,8 @@ export async function GET(req: Request) {
   try {
     const u = new URL(req.url);
     const route = u.pathname.slice(5);
+    if (route === 'admin' || route.startsWith('admin/'))
+      return json({ error: 'Không tìm thấy.' }, 404);
     if (route === 'health') {
       await db().prepare('SELECT 1 AS healthy').first();
       return json({ status: 'ok' });
@@ -82,7 +95,7 @@ export async function GET(req: Request) {
         ...config,
         donate: config.donate?.enabled
           ? config.donate
-          : { ...defaultSettings.donate, ...(config.donate || {}), enabled: true },
+          : { ...defaultSettings.donate, ...config.donate, enabled: true },
       });
     }
     if (route === 'auth')
@@ -107,10 +120,10 @@ export async function GET(req: Request) {
         },
       });
     }
-    if (route.startsWith('admin/')) {
+    if (route.startsWith('aiths/')) {
       if (!(await isAdmin(req)))
         return json({ error: 'Cần đăng nhập quản trị.' }, 401);
-      if (route === 'admin/data') {
+      if (route === 'aiths/data') {
         const [config, edits, manual, journal, cache] = await Promise.all([
           settings(),
           overrides(),
@@ -130,7 +143,7 @@ export async function GET(req: Request) {
           cache: cache.results,
         });
       }
-      if (route === 'admin/catalog' && u.searchParams.get('source') === 'ota') {
+      if (route === 'aiths/catalog' && u.searchParams.get('source') === 'ota') {
         const value = await ota(false, true);
         return json({
           ...value,
@@ -144,7 +157,7 @@ export async function GET(req: Request) {
           },
         });
       }
-      if (route === 'admin/catalog')
+      if (route === 'aiths/catalog')
         return json(
           await catalog(
             (u.searchParams.get('source') || 'archive') as Source,
@@ -165,7 +178,9 @@ export async function GET(req: Request) {
           ? 'ota'
           : route === 'stats'
             ? 'stats'
-            : route === 'recovery'
+            : route === 'zip'
+              ? 'archive'
+              : route === 'recovery'
               ? 'recovery'
               : route === 'logs'
                 ? 'changelog'
@@ -181,6 +196,8 @@ export async function GET(req: Request) {
       );
     if (route === 'ota') return json(await ota());
     if (route === 'stats') return json(await traffic());
+    if (route === 'zip')
+      return json(await zipBrowser(u.searchParams.get('id') || ''));
     if (route === 'entry')
       return json(await entryDetails(u.searchParams.get('id') || ''));
     if (route === 'changelog')
@@ -204,10 +221,7 @@ export async function GET(req: Request) {
     return json({ error: 'Không tìm thấy.' }, 404);
   } catch (e) {
     console.error('API read:', (e as Error).message);
-    return json(
-      { error: (e as Error).message || 'Không đọc được dữ liệu.' },
-      502,
-    );
+    return json({ error: safeError(e, 'Không đọc được dữ liệu.') }, 502);
   }
 }
 export async function POST(req: Request) {
@@ -217,8 +231,10 @@ export async function POST(req: Request) {
     // otherwise aborts pooled connections when a response precedes body consumption.
     const raw = await readBody(
       req,
-      route === 'admin/upload' ? 2300000 : 300000,
+      route === 'aiths/upload' ? 2300000 : 300000,
     );
+    if (route === 'admin' || route.startsWith('admin/'))
+      return json({ error: 'Không tìm thấy.' }, 404);
     checkOrigin(req);
     if (route === 'auth/login') {
       const data = JSON.parse(new TextDecoder().decode(raw));
@@ -233,7 +249,7 @@ export async function POST(req: Request) {
       return json({ ok: true }, 200, { 'Set-Cookie': await logout(req) });
     if (!(await isAdmin(req)))
       return json({ error: 'Cần đăng nhập quản trị.' }, 401);
-    if (route === 'admin/upload') {
+    if (route === 'aiths/upload') {
       if (Number(req.headers.get('content-length')) > 2300000)
         throw new Error('Ảnh tối đa 2 MB.');
       const upload = new Request(req.url, {
@@ -270,12 +286,12 @@ export async function POST(req: Request) {
       return json({ url: '/api/assets/' + key });
     }
     const value = JSON.parse(new TextDecoder().decode(raw));
-    if (route === 'admin/settings') {
+    if (route === 'aiths/settings') {
       const data = validateSettings(value);
       await writeDocument('settings', data);
       return json(data);
     }
-    if (route === 'admin/override') {
+    if (route === 'aiths/override') {
       const data = validateOverride(value);
       if (!(await findEntry(data.id)))
         throw new Error(
@@ -288,7 +304,7 @@ export async function POST(req: Request) {
       ]);
       return json(data);
     }
-    if (route === 'admin/reset-override') {
+    if (route === 'aiths/reset-override') {
       const id = str(value.id, 1000);
       await writeDocument(
         'overrides',
@@ -296,7 +312,7 @@ export async function POST(req: Request) {
       );
       return json({ ok: true });
     }
-    if (route === 'admin/custom') {
+    if (route === 'aiths/custom') {
       const entry = validateCustom(value);
       const all = await customs();
       const existing =
@@ -310,7 +326,7 @@ export async function POST(req: Request) {
       ]);
       return json(entry);
     }
-    if (route === 'admin/delete-custom') {
+    if (route === 'aiths/delete-custom') {
       const id = str(value.id, 1000);
       await writeDocument(
         'customs',
@@ -318,7 +334,7 @@ export async function POST(req: Request) {
       );
       return json({ ok: true });
     }
-    if (route === 'admin/log') {
+    if (route === 'aiths/log') {
       const log = validateLog(value);
       await writeDocument('logs', [
         ...(await logs()).filter((e) => e.id !== log.id),
@@ -326,14 +342,14 @@ export async function POST(req: Request) {
       ]);
       return json(log);
     }
-    if (route === 'admin/delete-log') {
+    if (route === 'aiths/delete-log') {
       await writeDocument(
         'logs',
         (await logs()).filter((e) => e.id !== str(value.id, 100)),
       );
       return json({ ok: true });
     }
-    if (route === 'admin/sync') {
+    if (route === 'aiths/sync') {
       if (value.source === 'ota') return json(await ota(true, true));
       if (value.source === 'stats') return json(await traffic(true));
       return json(
@@ -347,9 +363,7 @@ export async function POST(req: Request) {
     }
     return json({ error: 'Không tìm thấy.' }, 404);
   } catch (e) {
-    return json(
-      { error: (e as Error).message || 'Không lưu được thay đổi.' },
-      400,
-    );
+    console.error('API write:', (e as Error).message);
+    return json({ error: safeError(e, 'Không lưu được thay đổi.') }, 400);
   }
 }

@@ -216,7 +216,7 @@ function Toggle({
   );
 }
 function Dashboard({ onLogout }: { onLogout: () => void }) {
-  const state = useRemote<AdminData>('/api/admin/data');
+  const state = useRemote<AdminData>('/api/aiths/data');
   const [draft, setDraft] = useState<Settings>(defaultSettings);
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
@@ -295,7 +295,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
-                    void act(() => api('/api/admin/settings', draft));
+                    void act(() => api('/api/aiths/settings', draft));
                   }}
                 >
                   <div className="admin-columns">
@@ -695,7 +695,7 @@ function ImageField({
           try {
             const form = new FormData();
             form.set('file', file);
-            const res = await fetch('/api/admin/upload', {
+            const res = await fetch('/api/aiths/upload', {
               method: 'POST',
               headers: { 'X-ROM-CSRF': '1' },
               body: form,
@@ -788,7 +788,7 @@ function DeviceSettings({
   value: Settings;
   onChange: (v: Settings) => void;
 }) {
-  const root = useRemote<Cached<Catalog>>('/api/admin/catalog?source=archive');
+  const root = useRemote<Cached<Catalog>>('/api/aiths/catalog?source=archive');
   const names = [
     ...new Set([
       ...(root.data?.data.entries
@@ -908,7 +908,7 @@ function CatalogManager({
   const [path, setPath] = useState('');
   const [query, setQuery] = useState('');
   const result = useRemote<Cached<Catalog>>(
-    `/api/admin/catalog?source=${source}&path=${encodeURIComponent(path)}`,
+    `/api/aiths/catalog?source=${source}&path=${encodeURIComponent(path)}`,
   );
   const [selected, setSelected] = useState<Entry | null>(null);
   const [edit, setEdit] = useState<Override>({ id: '' });
@@ -1027,7 +1027,7 @@ function CatalogManager({
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              void act(() => api('/api/admin/override', edit)).then(() =>
+              void act(() => api('/api/aiths/override', edit)).then(() =>
                 result.reload(),
               );
             }}
@@ -1121,7 +1121,7 @@ function CatalogManager({
         description="Bỏ tên, mô tả, changelog, mirror và trạng thái tùy chỉnh của mục này."
         onConfirm={() => {
           void act(() =>
-            api('/api/admin/reset-override', { id: selected?.id }),
+            api('/api/aiths/reset-override', { id: selected?.id }),
           ).then((success) => {
             if (success) {
               setSelected(null);
@@ -1170,7 +1170,7 @@ function CustomManager({
           onSubmit={(e) => {
             e.preventDefault();
             void act(async () => {
-              const saved = await api<Entry>('/api/admin/custom', edit);
+              const saved = await api<Entry>('/api/aiths/custom', edit);
               setEdit((current) => ({ ...current, id: saved.id }));
               return saved;
             });
@@ -1341,7 +1341,7 @@ function CustomManager({
         title="Xóa liên kết riêng?"
         description="Mục này sẽ được gỡ khỏi website. File tại nguồn không bị ảnh hưởng."
         onConfirm={() => {
-          void act(() => api('/api/admin/delete-custom', { id: remove }));
+          void act(() => api('/api/aiths/delete-custom', { id: remove }));
         }}
       />
     </>
@@ -1373,7 +1373,7 @@ function JournalManager({
           onSubmit={(e) => {
             e.preventDefault();
             void act(async () => {
-              const saved = await api<SiteLog>('/api/admin/log', edit);
+              const saved = await api<SiteLog>('/api/aiths/log', edit);
               setEdit(saved);
               return saved;
             });
@@ -1466,7 +1466,7 @@ function JournalManager({
         title="Xóa bài cập nhật?"
         description="Bài này sẽ được gỡ khỏi nhật ký website."
         onConfirm={() => {
-          void act(() => api('/api/admin/delete-log', { id: remove }));
+          void act(() => api('/api/aiths/delete-log', { id: remove }));
         }}
       />
     </>
@@ -1517,7 +1517,7 @@ function SyncPanel({
             disabled={busy}
             onClick={() =>
               void act(
-                () => api('/api/admin/sync', { source, path }),
+                () => api('/api/aiths/sync', { source, path }),
                 'Đã làm mới dữ liệu. Kiểm tra trạng thái từng nguồn bên dưới.',
               )
             }

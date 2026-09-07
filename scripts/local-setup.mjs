@@ -48,7 +48,7 @@ if (!status[0]?.results?.length || process.argv.includes('--reset-admin')) {
   const sql = resolve('.local/bootstrap.sql');
   writeFileSync(
     sql,
-    `INSERT INTO admin(id,username,salt,hash) VALUES(1,'admin','${salt}','${hash}') ON CONFLICT(id) DO UPDATE SET username=excluded.username,salt=excluded.salt,hash=excluded.hash;\nDELETE FROM sessions;\nDELETE FROM login_throttle;`,
+    `INSERT INTO admin(id,username,salt,hash) VALUES(1,'admin','${salt}','${hash}') ON CONFLICT(id) DO UPDATE SET username=excluded.username,salt=excluded.salt,hash=excluded.hash;\nDELETE FROM sessions;\nDELETE FROM login_throttle;\nDELETE FROM login_throttle_bucket;`,
   );
   try {
     run(['d1', 'execute', 'DB', '--file', sql]);
@@ -57,7 +57,7 @@ if (!status[0]?.results?.length || process.argv.includes('--reset-admin')) {
   }
   writeFileSync(
     '.local/admin-access.txt',
-    `Kho ROM Việt — tài khoản quản trị local\n\nĐịa chỉ: http://127.0.0.1:4313/admin\nTên đăng nhập: admin\nMật khẩu: ${password}\n\nTệp này chỉ nằm trên máy, bị loại khỏi Git. Giữ riêng hoặc xóa sau khi lưu vào trình quản lý mật khẩu.\nĐặt lại bằng: npm run admin:reset\n`,
+    `Kho ROM Việt — tài khoản quản trị local\n\nĐịa chỉ: http://127.0.0.1:4313/aiths\nTên đăng nhập: admin\nMật khẩu: ${password}\n\nTệp này chỉ nằm trên máy, bị loại khỏi Git. Giữ riêng hoặc xóa sau khi lưu vào trình quản lý mật khẩu.\nĐặt lại bằng: npm run admin:reset\n`,
     { mode: 0o600 },
   );
   console.log(
@@ -70,7 +70,7 @@ if (!status[0]?.results?.length || process.argv.includes('--reset-admin')) {
       accessFile,
       readFileSync(accessFile, 'utf8').replace(
         /^Địa chỉ: .*$/m,
-        'Địa chỉ: http://127.0.0.1:4313/admin',
+        'Địa chỉ: http://127.0.0.1:4313/aiths',
       ),
     );
   }

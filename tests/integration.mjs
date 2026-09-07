@@ -27,9 +27,13 @@ async function request(path, body, auth = true) {
   const data = await res.json();
   return { res, data };
 }
-assert.equal((await request('admin/data', undefined, false)).res.status, 401);
-assert.equal((await request('admin/settings', {}, false)).res.status, 401);
-const csrf = await fetch(origin + '/api/admin/settings', {
+assert.equal((await request('aiths/data', undefined, false)).res.status, 401);
+assert.equal((await request('aiths/settings', {}, false)).res.status, 401);
+assert.equal((await request('admin/data', undefined, false)).res.status, 404);
+assert.equal((await request('admin/settings', {}, false)).res.status, 404);
+assert.equal((await fetch(origin + '/admin')).status, 404);
+assert.equal((await fetch(origin + '/aiths')).status, 200);
+const csrf = await fetch(origin + '/api/aiths/settings', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -65,6 +69,10 @@ assert.equal(
   new URL(detail.data.downloadUrl).hostname,
   'roms.danielspringer.at',
 );
+const zip = await request('zip?id=' + encodeURIComponent(file.id));
+assert.equal(zip.res.status, 200);
+assert.ok(zip.data.summary.entries > 0);
+assert.ok(zip.data.entries.some((entry) => entry.kind === 'file' || entry.kind === 'folder'));
 console.log('PASS real archive navigation, direct link and exact-file MD5');
 const ota = await request('ota');
 assert.ok(ota.data.data.length);
@@ -73,8 +81,8 @@ console.log('PASS real OTA metadata, no unresolved download links');
 const sf = await request('catalog?source=sourceforge&path=Oneplus%2013');
 assert.ok(sf.data.data.entries.length);
 console.log('PASS real SourceForge metadata');
-const before = (await request('admin/data')).data;
-const adminOta = await request('admin/catalog?source=ota');
+  const before = (await request('aiths/data')).data;
+  const adminOta = await request('aiths/catalog?source=ota');
 assert.equal(adminOta.res.status, 200);
 const release = adminOta.data.data.entries.find(
   (e) => e.id === ota.data.data[0].id,
@@ -86,7 +94,7 @@ const previous = before.overrides.find((e) => e.id === id);
 let customId;
 let logId;
 try {
-  await request('admin/override', {
+    await request('aiths/override', {
     id: release.id,
     changelogVi: 'Bản dịch đúng mã phát hành',
   });
@@ -98,7 +106,7 @@ try {
   console.log('PASS admin can edit the exact OTA release');
   assert.equal(
     (
-      await request('admin/override', {
+      await request('aiths/override', {
         id,
         description: 'Kiểm tra giữ nội dung sau đồng bộ',
         hidden: true,
@@ -106,8 +114,8 @@ try {
     ).res.status,
     200,
   );
-  await request('admin/sync', { source: 'archive', path: '' });
-  const changed = (await request('admin/data')).data;
+    await request('aiths/sync', { source: 'archive', path: '' });
+    const changed = (await request('aiths/data')).data;
   assert.equal(
     changed.overrides.find((e) => e.id === id).description,
     'Kiểm tra giữ nội dung sau đồng bộ',
@@ -127,7 +135,7 @@ try {
   console.log(
     'PASS overrides survive real sync and hidden entries stay hidden',
   );
-  const custom = await request('admin/custom', {
+    const custom = await request('aiths/custom', {
     name: 'Mục kiểm thử tự động',
     parent: '',
     device: 'Oneplus 13',
@@ -142,7 +150,7 @@ try {
   });
   assert.equal(custom.res.status, 200);
   customId = custom.data.id;
-  const log = await request('admin/log', {
+    const log = await request('aiths/log', {
     date: '2026-09-06',
     title: 'Bản nháp kiểm thử',
     body: 'Không xuất bản',
@@ -160,7 +168,7 @@ try {
     'base64',
   );
   fd.set('file', new Blob([png], { type: 'image/png' }), 'test.png');
-  const uploaded = await fetch(origin + '/api/admin/upload', {
+  const uploaded = await fetch(origin + '/api/aiths/upload', {
     method: 'POST',
     headers: { Cookie: cookie, Origin: origin, 'X-ROM-CSRF': '1' },
     body: fd,
@@ -178,12 +186,12 @@ try {
   );
   console.log('PASS invalid paths and arbitrary changelog fetch are rejected');
 } finally {
-  if (previousOta) await request('admin/override', previousOta);
-  else await request('admin/reset-override', { id: release.id });
-  if (previous) await request('admin/override', previous);
-  else await request('admin/reset-override', { id });
-  if (customId) await request('admin/delete-custom', { id: customId });
-  if (logId) await request('admin/delete-log', { id: logId });
+  if (previousOta) await request('aiths/override', previousOta);
+  else await request('aiths/reset-override', { id: release.id });
+  if (previous) await request('aiths/override', previous);
+  else await request('aiths/reset-override', { id });
+  if (customId) await request('aiths/delete-custom', { id: customId });
+  if (logId) await request('aiths/delete-log', { id: logId });
 }
 // Seed only a disposable cache entry; a missing upstream folder must preserve it.
 const key = 'archive:__rom_missing_test__';
@@ -238,7 +246,7 @@ try {
 try {
   const cold = await request('catalog?path=__rom_missing_test__');
   assert.equal(cold.res.status, 502);
-  const status = (await request('admin/data')).data.cache.find(
+  const status = (await request('aiths/data')).data.cache.find(
     (v) => v.key === key,
   );
   assert.equal(status.updated_at, 0);
@@ -255,6 +263,6 @@ try {
 }
 const signOut = await request('auth/logout', {});
 assert.equal(signOut.res.status, 200);
-assert.equal((await request('admin/data')).res.status, 401);
+assert.equal((await request('aiths/data')).res.status, 401);
 console.log('PASS logout invalidates server-side session');
 console.log('Integration checks complete; temporary content restored/removed.');

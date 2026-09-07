@@ -139,9 +139,11 @@ export function Shell({
             <span className="status-dot" /> Kho dữ liệu cộng đồng
           </div>
           <p>File tải từ máy chủ nguồn.</p>
-          <a href="/admin" className={`admin-link ${admin ? 'text-link' : ''}`}>
-            <ShieldCheck size={16} /> Quản trị
-          </a>
+          {admin && (
+            <span className="admin-link text-link">
+              <ShieldCheck size={16} /> Không gian riêng tư
+            </span>
+          )}
         </SidebarFooter>
       </Sidebar>
       <div className="main-wrap">

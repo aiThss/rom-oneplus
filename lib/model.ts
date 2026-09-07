@@ -35,6 +35,22 @@ export type Catalog = {
   notes: string[];
   sourceUrl: string;
 };
+export type ZipEntry = {
+  kind: 'folder' | 'file';
+  name: string;
+  path: string;
+  sizeLabel?: string;
+  important?: boolean;
+  downloadUrl?: string;
+  children?: ZipEntry[];
+};
+export type ZipBrowser = {
+  id: string;
+  name: string;
+  summary: { files: number; folders: number; entries: number };
+  entries: ZipEntry[];
+  sourceUrl: string;
+};
 export type Cached<T> = {
   data: T;
   updatedAt: number;

@@ -1,6 +1,6 @@
 # Kho ROM Việt
 
-Kho tra cứu ROM/firmware/recovery bằng tiếng Việt, giao diện lấy cảm hứng từ pinball. Phần người dùng ở `/`, trang quản trị ở `/admin`. File ROM luôn tải từ nguồn; ứng dụng chỉ lưu metadata, cấu hình, nội dung biên tập và ảnh logo/QR.
+Kho tra cứu ROM/firmware/recovery bằng tiếng Việt, giao diện lấy cảm hứng từ pinball. Phần người dùng ở `/`, không gian quản trị riêng tư ở `/aiths`. File ROM luôn tải từ nguồn; ứng dụng chỉ lưu metadata, cấu hình, nội dung biên tập và ảnh logo/QR.
 
 ## Chạy trên máy
 
@@ -21,7 +21,7 @@ Mở [http://127.0.0.1:4313](http://127.0.0.1:4313). Dự án dùng cổng riên
 ## Sử dụng và quản trị
 
 1. Chọn thiết bị, duyệt cây thư mục hoặc lọc tên trong danh mục đang xem. Mở **Chi tiết** để xem checksum, changelog và các link tải.
-2. Trong OTA, chọn thiết bị/khu vực/phiên bản. **Mở công cụ OTA** đưa đến nguồn; sao chép phiên bản để chọn đúng bản. API công khai không cấp link CDN đã chuẩn bị. Duyệt ZIP và trích xuất cũng mở công cụ nguồn.
+2. Trong ROM Archive, các gói ZIP có **Browse ZIP** để duyệt cây thư mục và tải riêng từng file từ máy chủ nguồn. Trong OTA, chọn thiết bị/khu vực/phiên bản. **Mở công cụ OTA** đưa đến nguồn; sao chép phiên bản để chọn đúng bản. API công khai không cấp link CDN đã chuẩn bị.
 3. Recovery/OFOX có trang phát hành OrangeFox cho OnePlus 13, cùng lối vào EDL. Có thể bổ sung recovery khác trong admin.
 4. Admin → **Nhận diện**: tên/logo/màu, hãng, thiết bị, thứ tự điều hướng, nhóm và donate. Nhóm rỗng và donate tắt mặc định. Tải logo/QR PNG, JPG hoặc WebP tối đa 2 MB, hoặc dùng URL HTTPS.
 5. **Danh mục nguồn**: chọn Archive, SourceForge hoặc bản OTA rồi biên tập tên, mô tả, changelog tiếng Việt, thứ tự, trạng thái ẩn và mirror đã xác minh. Lọc OTA theo tên phiên bản, thiết bị hoặc khu vực. Ẩn thư mục sẽ ẩn cả mục con. **Về dữ liệu nguồn** bỏ tùy chỉnh của đúng mục; không sửa dữ liệu ở máy chủ nguồn.
@@ -50,8 +50,8 @@ Giữ nguyên migration đã áp dụng trong `drizzle`. Thay đổi schema bằ
 - `lib/parsers.ts`: adapter archive, SourceForge, OTA, MD5/changelog và thống kê. HTML chỉ được trích thành văn bản/dữ liệu, không chèn HTML nguồn vào giao diện.
 - `lib/sources.ts`: giới hạn miền/đường dẫn metadata, timeout, giới hạn dung lượng, cache bền vững, xác minh mirror. Không có endpoint nhận URL tùy ý để proxy.
 - `source_cache` chứa bản nguồn. `documents` chứa cấu hình, ghi đè, link riêng và nhật ký, tách biệt khi đồng bộ. Các bảng `admin`, `sessions`, `login_throttle` quản lý đăng nhập.
-- API đọc: `GET /api/settings`, `/api/catalog?source=archive|sourceforge&path=...`, `/api/ota`, `/api/entry?id=...`, `/api/changelog?id=...`, `/api/recovery`, `/api/stats`, `/api/logs`.
-- API ghi nằm dưới `/api/admin/*`, bắt buộc phiên quản trị, `Origin` cùng nguồn và header `X-ROM-CSRF: 1`. Đăng nhập/đăng xuất ở `/api/auth/login` và `/api/auth/logout`; phiên 8 giờ, cookie HttpOnly/SameSite=Strict và Secure trên HTTPS. Mật khẩu scrypt, token phiên chỉ lưu hash trong DB; giới hạn thử sai 5 lần/15 phút.
+- API đọc: `GET /api/settings`, `/api/catalog?source=archive|sourceforge&path=...`, `/api/zip?id=archive:<path>`, `/api/ota`, `/api/entry?id=...`, `/api/changelog?id=...`, `/api/recovery`, `/api/stats`, `/api/logs`.
+- API ghi nằm dưới `/api/aiths/*`, bắt buộc phiên quản trị, `Origin` cùng nguồn và header `X-ROM-CSRF: 1`. Đăng nhập/đăng xuất ở `/api/auth/login` và `/api/auth/logout`; phiên 8 giờ, cookie HttpOnly/SameSite=Strict và Secure trên HTTPS. Mật khẩu scrypt, token phiên chỉ lưu hash trong DB; giới hạn thử sai theo client và toàn cục.
 - Ảnh đã lưu phục vụ qua `/api/assets/<id>`; chỉ nhận các định dạng có chữ ký file hợp lệ.
 - WebMCP `filter_rom_catalog` dùng chung ô tìm kiếm trong danh mục hiện tại, không tải phần mềm.
 

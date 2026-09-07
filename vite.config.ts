@@ -59,7 +59,7 @@ export default defineConfig(async () => {
   return {
     css: { postcss: { plugins: [tailwindcss()] } },
     build: {
-      rollupOptions: {
+      rolldownOptions: {
         external: ['cloudflare:workers'],
       },
     },
@@ -69,7 +69,7 @@ export default defineConfig(async () => {
             {
               find: '@/lib/platform',
               replacement: fileURLToPath(
-                new URL('./lib/platform.ts', import.meta.url),
+                new URL('./runtime/platform-node.ts', import.meta.url),
               ),
             },
           ]

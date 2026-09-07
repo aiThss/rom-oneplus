@@ -1,5 +1,12 @@
 import { parseHTML } from 'linkedom';
-import { ARCHIVE, SF, type Catalog, type Entry } from './model.ts';
+import {
+  ARCHIVE,
+  SF,
+  type Catalog,
+  type Entry,
+  type ZipBrowser,
+  type ZipEntry,
+} from './model.ts';
 export function plain(html: string) {
   const { document } = parseHTML(`<html><body>${html}</body></html>`);
   document
@@ -42,6 +49,122 @@ export function sfUrl(path: string) {
       .join('/') +
     (path ? '/' : '')
   );
+}
+const ZIP_BROWSER_HOST = 'roms.danielspringer.at';
+const ZIP_BROWSER_PATH = '/index.php';
+const MAX_ZIP_ENTRIES = 2000;
+
+export function zipBrowserUrl(parent: string, name: string) {
+  const dir = normalizedPath(parent);
+  if (!name || name.includes('/') || name.includes('\\'))
+    throw new Error('Tên ZIP không hợp lệ.');
+  const url = new URL(ZIP_BROWSER_PATH, ARCHIVE);
+  if (dir) url.searchParams.set('dir', dir);
+  url.searchParams.set('zip', name);
+  url.hash = 'zip-browser';
+  return url.href;
+}
+
+export function safeZipDownload(value: string, base = ARCHIVE) {
+  try {
+    const u = new URL(value, base);
+    if (
+      u.protocol !== 'https:' ||
+      u.hostname !== ZIP_BROWSER_HOST ||
+      u.port ||
+      u.username ||
+      u.password ||
+      u.pathname !== ZIP_BROWSER_PATH ||
+      u.searchParams.get('action') !== 'download_from_zip'
+    )
+      return undefined;
+    const zip = u.searchParams.get('zip') || '';
+    const file = u.searchParams.get('file') || '';
+    const keys = [...u.searchParams.keys()];
+    if (
+      !zip.toLowerCase().endsWith('.zip') ||
+      !file ||
+      keys.length !== 3 ||
+      keys.some((key) => !['action', 'zip', 'file'].includes(key)) ||
+      new Set(keys).size !== 3
+    )
+      return undefined;
+    normalizedPath(zip);
+    normalizedPath(file);
+    return u.href;
+  } catch {
+    return undefined;
+  }
+}
+
+function zipText(el: Element | null) {
+  return el?.textContent?.replace(/\s+/g, ' ').trim() || '';
+}
+
+export function parseZipBrowser(
+  html: string,
+  id: string,
+  sourceUrl: string,
+): ZipBrowser {
+  const { document } = parseHTML(html);
+  const root = document.querySelector(
+    '#zip-browser .zip-tree-root-list, .zip-browser .zip-tree-root-list',
+  );
+  if (!root) throw new Error('Nguồn chưa cung cấp cây ZIP hợp lệ.');
+  let files = 0;
+  let folders = 0;
+  let entries = 0;
+
+  function parseList(list: Element, parent = ''): ZipEntry[] {
+    const result: ZipEntry[] = [];
+    for (const child of Array.from(list.children)) {
+      if (child.tagName?.toLowerCase() !== 'li') continue;
+      const isFolder = child.classList.contains('zip-dir');
+      const isFile = child.classList.contains('zip-file');
+      if (!isFolder && !isFile) continue;
+      entries++;
+      if (entries > MAX_ZIP_ENTRIES)
+        throw new Error('Cây ZIP có quá nhiều mục.');
+      const name = zipText(child.querySelector('.zip-entry-copy > strong'));
+      if (!name || name.length > 300) continue;
+      const path = normalizedPath(parent ? `${parent}/${name}` : name);
+      if (isFolder) {
+        folders++;
+        const nested = Array.from(child.children).find(
+          (element) => element.tagName?.toLowerCase() === 'ul',
+        );
+        result.push({
+          kind: 'folder',
+          name,
+          path,
+          children: nested ? parseList(nested, path) : [],
+        });
+        continue;
+      }
+      files++;
+      const download = child.querySelector('a.zip-download')?.getAttribute('href');
+      result.push({
+        kind: 'file',
+        name,
+        path,
+        sizeLabel: zipText(child.querySelector('.zip-size')) || undefined,
+        important: !!child.querySelector('.zip-priority-badge'),
+        downloadUrl: download ? safeZipDownload(download) : undefined,
+      });
+    }
+    return result;
+  }
+
+  const tree = parseList(root);
+  if (!tree.length) throw new Error('ZIP không có mục để hiển thị.');
+  const title = zipText(document.querySelector('#zip-inline-title'));
+  return {
+    id,
+    name: title || id.replace(/^archive:/, '').split('/').at(-1) || 'ZIP',
+    summary: { files, folders, entries },
+    entries: tree,
+    sourceUrl,
+  };
 }
 const text = (e: Element | null) =>
   e?.textContent?.replace(/\s+/g, ' ').trim() || '';

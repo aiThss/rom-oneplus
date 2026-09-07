@@ -12,6 +12,7 @@ import {
   Search,
   Download,
   ChevronRight,
+  ChevronDown,
   HardDrive,
   ShieldCheck,
   Clock,
@@ -64,6 +65,8 @@ import {
   type Cached,
   type Catalog,
   type Entry,
+  type ZipBrowser,
+  type ZipEntry,
   type SiteLog,
 } from '@/lib/model';
 import type { Traffic } from '@/lib/parsers';
@@ -235,6 +238,7 @@ function ArchiveView({ view, path }: { view: string; path: string }) {
   );
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<Entry | null>(null);
+  const [zipEntry, setZipEntry] = useState<Entry | null>(null);
   const [kind, setKind] = useState('all');
   const [sort, setSort] = useState('source');
   useEffect(() => {
@@ -456,7 +460,12 @@ function ArchiveView({ view, path }: { view: string; path: string }) {
               </div>
               <div className="file-list">
                 {files.map((e) => (
-                  <FileRow key={e.id} entry={e} onSelect={setSelected} />
+                  <FileRow
+                    key={e.id}
+                    entry={e}
+                    onSelect={setSelected}
+                    onBrowseZip={setZipEntry}
+                  />
                 ))}
               </div>
             </>
@@ -511,6 +520,7 @@ function ArchiveView({ view, path }: { view: string; path: string }) {
                     key={e.id}
                     entry={e}
                     onSelect={setSelected}
+                    onBrowseZip={setZipEntry}
                     compact
                   />
                 ))}
@@ -521,16 +531,22 @@ function ArchiveView({ view, path }: { view: string; path: string }) {
         </>
       )}
       <EntrySheet entry={selected} onClose={() => setSelected(null)} />
+      <ZipBrowserSheet
+        entry={zipEntry}
+        onClose={() => setZipEntry(null)}
+      />
     </>
   );
 }
 export function FileRow({
   entry,
   onSelect,
+  onBrowseZip,
   compact = false,
 }: {
   entry: Entry;
   onSelect: (entry: Entry) => void;
+  onBrowseZip?: (entry: Entry) => void;
   compact?: boolean;
 }) {
   return (
@@ -564,6 +580,22 @@ export function FileRow({
         )}
       </button>
       <div className="file-actions">
+        {entry.toolsUrl &&
+          entry.source === 'archive' &&
+          entry.kind === 'file' &&
+          onBrowseZip && (
+          <Button
+            variant="outline"
+            className="action zip-action"
+            onClick={(event) => {
+              event.stopPropagation();
+              onBrowseZip(entry);
+            }}
+          >
+            <Folder size={15} />
+            Browse ZIP
+          </Button>
+        )}
         <Button
           variant="outline"
           className="action"
@@ -632,15 +664,18 @@ export function EntrySheet({
   );
   const value = detail.data || entry;
   const [original, setOriginal] = useState(false);
+  const [zipEntry, setZipEntry] = useState<Entry | null>(null);
   useEffect(() => setOriginal(false), [entry?.id]);
+  useEffect(() => setZipEntry(null), [entry?.id]);
   return (
-    <Sheet
-      open={!!entry}
-      onOpenChange={(o) => {
-        if (!o) onClose();
-      }}
-    >
-      <SheetContent className="entry-sheet" showCloseButton={false}>
+    <>
+      <Sheet
+        open={!!entry}
+        onOpenChange={(o) => {
+          if (!o) onClose();
+        }}
+      >
+        <SheetContent className="entry-sheet" showCloseButton={false}>
         <SheetClose
           render={
             <Button variant="ghost" size="icon" className="sheet-close" />
@@ -816,10 +851,20 @@ export function EntrySheet({
                       </div>
                     ))}
                   </div>
-                  {value.toolsUrl && (
-                    <External href={value.toolsUrl}>
-                      Duyệt ZIP / công cụ nguồn
-                    </External>
+                  {value.toolsUrl &&
+                    value.source === 'archive' &&
+                    value.kind === 'file' && (
+                    <div className="action-row zip-actions">
+                      <Button
+                        variant="outline"
+                        className="action"
+                        onClick={() => setZipEntry(value)}
+                      >
+                        <Folder size={15} />
+                        Browse ZIP
+                      </Button>
+                      <External href={value.toolsUrl}>Mở nguồn</External>
+                    </div>
                   )}
                   <div className="source-bottom">
                     <External href={value.sourceUrl}>Trang nguồn</External>
@@ -867,8 +912,127 @@ export function EntrySheet({
             </div>
           </>
         )}
+        </SheetContent>
+      </Sheet>
+      <ZipBrowserSheet
+        entry={zipEntry}
+        onClose={() => setZipEntry(null)}
+      />
+    </>
+  );
+}
+
+function ZipBrowserSheet({
+  entry,
+  onClose,
+}: {
+  entry: Entry | null;
+  onClose: () => void;
+}) {
+  const result = useRemote<ZipBrowser>(
+    entry ? '/api/zip?id=' + encodeURIComponent(entry.id) : null,
+  );
+  return (
+    <Sheet
+      open={!!entry}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <SheetContent className="zip-sheet" showCloseButton={false}>
+        <SheetClose
+          render={
+            <Button variant="ghost" size="icon" className="sheet-close" />
+          }
+          aria-label="Đóng Browse ZIP"
+        >
+          <X size={20} />
+        </SheetClose>
+        <SheetHeader>
+          <div className="sheet-icon">
+            <Folder size={26} />
+          </div>
+          <SheetTitle className="sheet-title">
+            {result.data?.name || entry?.name || 'Browse ZIP'}
+          </SheetTitle>
+          <SheetDescription>
+            {result.data
+              ? `${result.data.summary.files} file · ${result.data.summary.folders} thư mục · ${result.data.summary.entries} mục`
+              : 'Duyệt nội dung ZIP và tải riêng từng file.'}
+          </SheetDescription>
+        </SheetHeader>
+        <div className="zip-browser-body">
+          {result.loading ? (
+            <Loading />
+          ) : result.error ? (
+            <>
+              <ErrorState error="Chưa đọc được cây ZIP từ nguồn." retry={result.reload} />
+              {entry?.toolsUrl && <External href={entry.toolsUrl}>Mở Browser ZIP nguồn</External>}
+            </>
+          ) : result.data ? (
+            <ul className="zip-tree-list" aria-label="Nội dung ZIP">
+              {result.data.entries.map((item) => (
+                <ZipTreeItem key={item.path} item={item} />
+              ))}
+            </ul>
+          ) : null}
+        </div>
       </SheetContent>
     </Sheet>
+  );
+}
+
+function ZipTreeItem({ item }: { item: ZipEntry }) {
+  const [open, setOpen] = useState(false);
+  if (item.kind === 'folder') {
+    return (
+      <li className="zip-tree-item zip-tree-folder">
+        <button
+          type="button"
+          className="zip-tree-toggle"
+          aria-expanded={open}
+          onClick={() => setOpen((current) => !current)}
+        >
+          <Folder size={17} />
+          <span className="zip-tree-name">
+            <strong>{item.name}</strong>
+            <small>{item.children?.length || 0} mục</small>
+          </span>
+          <ChevronDown size={16} className={open ? 'zip-tree-chevron open' : 'zip-tree-chevron'} />
+        </button>
+        {open && item.children?.length ? (
+          <ul className="zip-tree-children">
+            {item.children.map((child) => (
+              <ZipTreeItem key={child.path} item={child} />
+            ))}
+          </ul>
+        ) : null}
+      </li>
+    );
+  }
+  return (
+    <li className={`zip-tree-item zip-tree-file ${item.important ? 'important' : ''}`}>
+      <FileText size={17} />
+      <span className="zip-tree-name">
+        <strong>{item.name}</strong>
+        <small>
+          {item.important ? 'Important image' : 'Inner file'}
+          {item.sizeLabel ? ` · ${item.sizeLabel}` : ''}
+        </small>
+      </span>
+      {item.downloadUrl ? (
+        <a
+          className="action zip-download-action"
+          href={item.downloadUrl}
+          target="_blank"
+          rel="noreferrer"
+        >
+          Tải file
+        </a>
+      ) : (
+        <span className="zip-missing-link">Không có link</span>
+      )}
+    </li>
   );
 }
 function OtaView() {
