@@ -9,13 +9,14 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 
-# Sao chép toàn bộ mã nguồn
-COPY . .
-
 # Build dự án cho môi trường Node độc lập (không Cloudflare Workers)
 ENV NODE_ENV=production
 ENV TARGET=node
 ENV PUBLIC_ORIGIN=http://127.0.0.1:3000
+ARG CACHE_BUST=20260907
+RUN echo "Refreshing Docker source cache: ${CACHE_BUST}"
+# Sao chép toàn bộ mã nguồn sau cache-bust để Dokploy không giữ source cũ.
+COPY . .
 # Never carry a compiled bundle across a reused builder layer.
 RUN rm -rf dist && npx vinext build
 
