@@ -10,6 +10,9 @@ const SITE_CREATOR_PLACEHOLDER_DATABASE_ID =
 
 const { d1, r2 } = hostingConfig;
 const isNodeTarget = process.env.TARGET === 'node';
+const nodeCloudflareWorkersShim = fileURLToPath(
+  new URL('./runtime/cloudflare-workers-node.ts', import.meta.url),
+);
 
 // macOS Seatbelt blocks FSEvents, so Codex previews need polling for HMR.
 const isCodexSeatbeltSandbox = process.env.CODEX_SANDBOX === 'seatbelt';
@@ -60,12 +63,19 @@ export default defineConfig(async () => {
     css: { postcss: { plugins: [tailwindcss()] } },
     build: {
       rolldownOptions: {
-        external: ['cloudflare:workers'],
+        // Vinext's server bundle imports this Worker-native module even when
+        // the app is built for the standalone Node server. Resolve it to the
+        // local adapter so Node never tries to load the `cloudflare:` scheme.
+        external: isNodeTarget ? [] : ['cloudflare:workers'],
       },
     },
     resolve: {
       alias: isNodeTarget
         ? [
+            {
+              find: 'cloudflare:workers',
+              replacement: nodeCloudflareWorkersShim,
+            },
             {
               find: '@/lib/platform',
               replacement: fileURLToPath(
