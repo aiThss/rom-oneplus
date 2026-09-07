@@ -23,14 +23,6 @@ import {
   Send,
   Check,
   TriangleAlert,
-  Ruler,
-  Scale,
-  Monitor,
-  Cpu,
-  Camera,
-  BatteryCharging,
-  MemoryStick,
-  Shield,
 } from 'lucide-react';
 import { Shell } from './shell';
 import {
@@ -168,67 +160,31 @@ function Freshness({ value }: { value: Cached<unknown> }) {
     </div>
   );
 }
-const specIcons = [
-  Ruler,
-  Scale,
-  Monitor,
-  Cpu,
-  Camera,
-  BatteryCharging,
-  MemoryStick,
-  Shield,
-];
-function DevicePreview({ device }: { device: string }) {
+function DevicePreviewCompact({ device }: { device: string }) {
   const spec = deviceSpecFor(device);
   if (!spec) return null;
-  const fields: { label: string; value: string }[] = [
-    { label: 'Kích thước', value: spec.dimensions },
-    { label: 'Trọng lượng', value: spec.weight },
-    { label: 'Màn hình', value: spec.display },
-    { label: 'Chip xử lý', value: spec.chipset },
-    { label: 'Camera', value: spec.camera },
-    { label: 'Pin & sạc', value: spec.battery },
-    { label: 'Bộ nhớ', value: spec.memory },
-    { label: 'Nền tảng & bảo vệ', value: spec.protection },
-  ];
   return (
-    <section
-      className="device-preview panel"
-      aria-labelledby="device-preview-title"
+    <a
+      className="device-preview-compact"
+      href={spec.sourceUrl}
+      target="_blank"
+      rel="noreferrer"
+      aria-label={`Xem cấu hình ${spec.name} trên GSMArena`}
     >
-      <div className="device-preview-media">
+      <div className="device-preview-compact-media">
         <img src={spec.imageUrl} alt={spec.imageAlt} />
-        <span className="device-preview-source">Ảnh từ GSMArena</span>
       </div>
-      <div className="device-preview-content">
-        <div className="device-preview-heading">
-          <div>
-            <div className="eyebrow">THÔNG TIN THIẾT BỊ</div>
-            <h2 id="device-preview-title">{spec.name}</h2>
-            <p>Tóm tắt nhanh để chọn đúng thư mục ROM và firmware.</p>
-          </div>
-          <External href={spec.sourceUrl}>Xem GSMArena</External>
-        </div>
-        <div className="device-preview-meta">
-          <span>Ra mắt {spec.released}</span>
-          <span>Thông số tham khảo</span>
-        </div>
-        <div className="device-spec-grid">
-          {fields.map((field, index) => {
-            const Icon = specIcons[index];
-            return (
-              <div className="device-spec-item" key={field.label}>
-                <Icon size={16} aria-hidden="true" />
-                <div>
-                  <span>{field.label}</span>
-                  <strong>{field.value}</strong>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+      <div className="device-preview-compact-copy">
+        <span className="device-preview-compact-label">CẤU HÌNH TÓM TẮT</span>
+        <strong>{spec.name}</strong>
+        <span className="device-preview-compact-specs">
+          {spec.display.split(' · ').slice(0, 2).join(' · ')}
+          {' · '}
+          {spec.battery.split(' · ')[0]}
+        </span>
       </div>
-    </section>
+      <ArrowUpRight size={15} aria-hidden="true" />
+    </a>
   );
 }
 function ArchiveView({ view, path }: { view: string; path: string }) {
@@ -330,10 +286,16 @@ function ArchiveView({ view, path }: { view: string; path: string }) {
               : 'Kho lưu trữ ROM tùy biến, firmware gốc, recovery và công cụ cứu máy.'
         }
         extra={
-          <span className="subtle-pill">
-            <HardDrive size={15} />
-            {view === 'mirrors' ? 'SourceForge' : 'ROM Archive'}
-          </span>
+          <div className="heading-actions">
+            {path && deviceSpecFor(path) ? (
+              <DevicePreviewCompact device={path} />
+            ) : (
+              <span className="subtle-pill">
+                <HardDrive size={15} />
+                {view === 'mirrors' ? 'SourceForge' : 'ROM Archive'}
+              </span>
+            )}
+          </div>
         }
       />
       {path && (
@@ -357,7 +319,6 @@ function ArchiveView({ view, path }: { view: string; path: string }) {
           ))}
         </nav>
       )}
-      {path && !path.includes('/') && <DevicePreview device={path} />}
       <div className="toolbar">
         <div className="search-box">
           <Search size={19} />
