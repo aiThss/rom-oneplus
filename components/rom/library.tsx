@@ -364,7 +364,7 @@ function ArchiveView({ view, path }: { view: string; path: string }) {
                                 : 'Công cụ'}
                         </span>
                         <h3>{displayName(entry.name)}</h3>
-                        <p>{entry.description || 'Xem phần mềm'}</p>
+                        <p>{entry.description || 'Xem thư mục'}</p>
                       </div>
                       <div className="device-arrow">
                         <ArrowUpRight size={17} />
@@ -430,7 +430,7 @@ function ArchiveView({ view, path }: { view: string; path: string }) {
             <>
               <div className="section-title">
                 <h2>Những cập nhật mới...</h2>
-                <span>Bản cập nhật gần đây</span>
+                <span>Cập nhật gần đây</span>
               </div>
               <div className="file-list">
                 {data.latest.map((e) => (
