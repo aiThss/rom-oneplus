@@ -51,6 +51,7 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
   defaultSettings,
+  brandOf,
   displayName,
   formatBytes,
   type Settings,
@@ -81,19 +82,27 @@ function translateTechnicalNote(note: string) {
 }
 
 function locationState() {
-  if (typeof window === 'undefined') return { view: 'archive', path: '' };
+  if (typeof window === 'undefined')
+    return { view: 'archive', path: '', brand: '' };
   const p = new URLSearchParams(location.search);
-  return { view: p.get('view') || 'archive', path: p.get('path') || '' };
+  return {
+    view: p.get('view') || 'archive',
+    path: p.get('path') || '',
+    brand: p.get('brand') || '',
+  };
 }
-function browse(view: string, path = '') {
-  return `/?view=${view}${path ? '&path=' + encodeURIComponent(path) : ''}`;
+function browse(view: string, path = '', brand = '') {
+  const params = new URLSearchParams({ view });
+  if (path) params.set('path', path);
+  if (brand) params.set('brand', brand);
+  return `/?${params.toString()}`;
 }
 function isArb(text?: string | null): boolean {
   if (!text) return false;
   return /\barb\b|anti-rollback/i.test(text);
 }
 export function Library() {
-  const [loc, setLoc] = useState({ view: 'archive', path: '' });
+  const [loc, setLoc] = useState({ view: 'archive', path: '', brand: '' });
   const { data: settings, error: configError } =
     useRemote<Settings>('/api/settings');
   const config = settings || defaultSettings;
@@ -103,11 +112,12 @@ export function Library() {
   useEffect(() => {
     document.title = config.name + ' — ROM, firmware & recovery';
   }, [config.name]);
+  const activeView = loc.view === 'xiaomi' ? 'archive' : loc.view;
   const visible =
-    config.sections.find((s) => s.id === loc.view)?.enabled !== false;
+    config.sections.find((s) => s.id === activeView)?.enabled !== false;
   return (
     <Shell
-      active={loc.view}
+      active={activeView}
       {...config}
       donate={config.donate?.enabled ?? true}
       groups={config.groups}
@@ -119,20 +129,25 @@ export function Library() {
             title="Danh mục đang ẩn"
             description="Quản trị viên đã tắt mục này."
           />
-        ) : loc.view === 'ota' ? (
+        ) : activeView === 'ota' ? (
           <OtaView />
-        ) : loc.view === 'recovery' ? (
+        ) : activeView === 'recovery' ? (
           <RecoveryView />
-        ) : loc.view === 'stats' ? (
+        ) : activeView === 'stats' ? (
           <StatsView />
-        ) : loc.view === 'changelog' ? (
+        ) : activeView === 'changelog' ? (
           <ChangelogView />
-        ) : loc.view === 'donate' ? (
+        ) : activeView === 'donate' ? (
           <DonateView config={config} />
         ) : (
           <ArchiveView
-            view={loc.view === 'mirrors' ? 'mirrors' : 'archive'}
+            view={activeView === 'mirrors' ? 'mirrors' : 'archive'}
             path={loc.path}
+            brand={
+              activeView === 'archive'
+                ? loc.brand || (loc.view === 'xiaomi' && loc.path ? 'xiaomi' : '')
+                : ''
+            }
           />
         )}
       </>
@@ -218,11 +233,78 @@ function DevicePreviewCompact({
     </a>
   );
 }
-function ArchiveView({ view, path }: { view: string; path: string }) {
+const BRAND_CHOICES = [
+  {
+    id: 'oneplus',
+    name: 'OnePlus',
+    description: 'ROM tùy biến, firmware, recovery và công cụ cứu máy.',
+    source: 'Kho ROM Việt',
+  },
+  {
+    id: 'xiaomi',
+    name: 'Xiaomi',
+    description: 'Thiết bị Xiaomi và các nhánh HyperOS theo khu vực.',
+    source: 'HyperOS.fans',
+  },
+  {
+    id: 'redmi',
+    name: 'Redmi',
+    description: 'Danh sách Redmi, phiên bản hệ điều hành và gói ROM.',
+    source: 'HyperOS.fans',
+  },
+  {
+    id: 'poco',
+    name: 'POCO',
+    description: 'Danh sách POCO và các gói Recovery/Fastboot tương ứng.',
+    source: 'HyperOS.fans',
+  },
+] as const;
+
+function BrandChooser() {
+  return (
+    <section className="brand-chooser panel" aria-labelledby="brand-chooser-title">
+      <div className="brand-chooser-heading">
+        <span className="eyebrow">THƯ VIỆN THIẾT BỊ</span>
+        <h2 id="brand-chooser-title">Bạn đang sử dụng hãng điện thoại gì?</h2>
+        <p>Chọn hãng để mở nhóm thiết bị được hỗ trợ.</p>
+      </div>
+      <div className="brand-choice-grid">
+        {BRAND_CHOICES.map((brand, i) => (
+          <a
+            className="brand-choice-card"
+            href={browse('archive', '', brand.id)}
+            key={brand.id}
+          >
+            <div className={`brand-choice-symbol tone-${i % 3}`}>
+              <Smartphone size={23} />
+            </div>
+            <div>
+              <span className="meta">{brand.source}</span>
+              <h3>{brand.name}</h3>
+              <p>{brand.description}</p>
+            </div>
+            <ArrowUpRight size={17} className="brand-choice-arrow" />
+          </a>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function ArchiveView({
+  view,
+  path,
+  brand = '',
+}: {
+  view: string;
+  path: string;
+  brand?: string;
+}) {
+  const brandChoice = BRAND_CHOICES.find((item) => item.id === brand);
   const source =
     view === 'mirrors'
       ? 'sourceforge'
-      : view === 'xiaomi'
+      : brandChoice && brandChoice.id !== 'oneplus'
         ? 'xiaomi'
         : 'archive';
   const result = useRemote<Cached<Catalog>>(
@@ -236,7 +318,7 @@ function ArchiveView({ view, path }: { view: string; path: string }) {
   useEffect(() => {
     setQuery('');
     setKind('all');
-  }, [path, view]);
+  }, [path, view, brand]);
   const data = result.data?.data;
   const deviceRoot = path.split('/')[0];
   const sourceNotes = (data?.notes ?? []).map(translateTechnicalNote);
@@ -252,10 +334,13 @@ function ArchiveView({ view, path }: { view: string; path: string }) {
         displayName(e.name).toLowerCase().includes(query.toLowerCase()) &&
         (kind === 'all' || e.kind === kind),
     );
+    if (!path && brandChoice && source === 'xiaomi') {
+      list = list.filter((entry) => brandOf(entry.name) === brandChoice.name);
+    }
     if (sort === 'name')
       list = [...list].sort((a, b) => a.name.localeCompare(b.name, 'vi'));
     return list;
-  }, [data, query, kind, sort]);
+  }, [data, query, kind, sort, path, brandChoice, source]);
   const folders = entries.filter((e) => e.kind === 'folder');
   const files = entries.filter((e) => e.kind !== 'folder');
   useEffect(() => {
@@ -309,36 +394,36 @@ function ArchiveView({ view, path }: { view: string; path: string }) {
     } catch {}
     return () => ctrl.abort();
   }, [data, path, kind]);
+  const chooser = view === 'archive' && !path && !brandChoice;
   const title = path
     ? data?.title || displayName(path.split('/').at(-1)!)
     : view === 'mirrors'
       ? 'Kho lưu trữ SourceForge'
-      : view === 'xiaomi'
-        ? 'Chọn thiết bị Xiaomi'
+      : brandChoice
+        ? `Thiết bị ${brandChoice.name}`
         : 'Chọn thiết bị của bạn';
+  const description = path
+    ? (source === 'xiaomi'
+        ? data?.preview?.name || displayName(path.split('/')[0])
+        : displayName(path.split('/')[0])) +
+      ' · Chọn thư mục hoặc bản phần mềm cần tải.'
+    : view === 'mirrors'
+      ? 'Các bản lưu trữ và gói tải bổ sung từ SourceForge.'
+      : brandChoice
+        ? `${brandChoice.name} · Chọn thiết bị được hỗ trợ để xem các gói tải.`
+        : 'Chọn hãng điện thoại để mở nhóm thiết bị hỗ trợ.';
   return (
     <>
       <Heading
         eyebrow={
           view === 'mirrors'
             ? 'SourceForge Mirrors'
-            : view === 'xiaomi'
-              ? 'XIAOMI / HYPEROS'
+            : brandChoice
+              ? brandChoice.name.toUpperCase()
               : 'Thư viện phần mềm'
         }
         title={title}
-        description={
-          path
-            ? (view === 'xiaomi'
-                ? data?.preview?.name || displayName(path.split('/')[0])
-                : displayName(path.split('/')[0])) +
-              ' · Chọn thư mục hoặc bản phần mềm cần tải.'
-            : view === 'mirrors'
-              ? 'Các bản lưu trữ và gói tải bổ sung từ SourceForge.'
-              : view === 'xiaomi'
-                ? 'ROM HyperOS cho Xiaomi, Redmi và POCO; chọn đúng mã máy và khu vực trước khi tải.'
-                : 'Kho lưu trữ ROM tùy biến, firmware gốc, recovery và công cụ cứu máy.'
-        }
+        description={description}
         extra={
           <div className="heading-actions">
             {path && (data?.preview || deviceSpecFor(deviceRoot)) ? (
@@ -351,9 +436,9 @@ function ArchiveView({ view, path }: { view: string; path: string }) {
                 <HardDrive size={15} />
                 {view === 'mirrors'
                   ? 'SourceForge'
-                  : view === 'xiaomi'
-                    ? 'HyperOS.fans'
-                    : 'ROM Archive'}
+              : brandChoice && brandChoice.id !== 'oneplus'
+                ? 'HyperOS.fans'
+                : 'ROM Archive'}
               </span>
             )}
           </div>
@@ -361,8 +446,8 @@ function ArchiveView({ view, path }: { view: string; path: string }) {
       />
       {path && (
         <nav className="breadcrumbs" aria-label="Đường dẫn">
-          <a href={browse(view)}>
-            {view === 'xiaomi' ? 'Thiết bị Xiaomi' : 'Thiết bị'}
+          <a href={browse(view, '', brand)}>
+            {view === 'mirrors' ? 'SourceForge' : 'Chọn hãng điện thoại'}
           </a>
           {path.split('/').map((part, i) => (
             <span key={i}>
@@ -374,11 +459,12 @@ function ArchiveView({ view, path }: { view: string; path: string }) {
                     .split('/')
                     .slice(0, i + 1)
                     .join('/'),
+                  brand,
                 )}
               >
-                {view === 'xiaomi' && i === 0
+                {source === 'xiaomi' && i === 0
                   ? data?.preview?.name || displayName(part)
-                  : view === 'xiaomi' && i === 1
+                  : source === 'xiaomi' && i === 1
                     ? data?.title || displayName(part)
                     : displayName(part)}
               </a>
@@ -422,7 +508,11 @@ function ArchiveView({ view, path }: { view: string; path: string }) {
           </ul>
         </details>
       ) : null}
-      <div className="toolbar">
+      {chooser ? (
+        <BrandChooser />
+      ) : (
+        <>
+          <div className="toolbar">
         <div className="search-box">
           <Search size={19} />
           <Input
@@ -452,7 +542,7 @@ function ArchiveView({ view, path }: { view: string; path: string }) {
             { value: 'name', label: 'Tên A–Z' },
           ]}
         />
-      </div>
+          </div>
       {result.loading ? (
         <Loading />
       ) : result.error ? (
@@ -480,7 +570,8 @@ function ArchiveView({ view, path }: { view: string; path: string }) {
               </div>
               <div className="device-grid">
                 {folders.map((entry, i) => {
-                  const xiaomiDevice = view === 'xiaomi' && !path;
+                  const xiaomiDevice =
+                    source === 'xiaomi' && !path && Boolean(brandChoice);
                   const Icon = path
                     ? Folder
                     : /pad/i.test(entry.name)
@@ -495,7 +586,7 @@ function ArchiveView({ view, path }: { view: string; path: string }) {
                   return (
                     <a
                       className="device-card"
-                      href={browse(view, entry.path)}
+                      href={browse(view, entry.path, brand)}
                       key={entry.id}
                     >
                       <div className={`device-symbol tone-${i % 3}`}>
@@ -584,6 +675,8 @@ function ArchiveView({ view, path }: { view: string; path: string }) {
         entry={zipEntry}
         onClose={() => setZipEntry(null)}
       />
+        </>
+      )}
     </>
   );
 }

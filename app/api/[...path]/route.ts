@@ -174,7 +174,7 @@ export async function GET(req: Request) {
         ? u.searchParams.get('source') === 'sourceforge'
           ? 'mirrors'
           : u.searchParams.get('source') === 'xiaomi'
-            ? 'xiaomi'
+            ? 'archive'
             : 'archive'
         : route === 'ota'
           ? 'ota'

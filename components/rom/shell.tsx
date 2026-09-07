@@ -29,13 +29,18 @@ import {
 import { Button } from '@/components/ui/button';
 const SmartphoneIcon = Smartphone;
 export const navigation = [
-  { id: 'archive', label: 'Kho phần mềm', icon: Grid2X2 },
-  { id: 'xiaomi', label: 'Xiaomi / HyperOS', icon: SmartphoneIcon },
-  { id: 'recovery', label: 'Recovery / OFOX', icon: ShieldCheck },
-  { id: 'ota', label: 'Firmware OTA', icon: Layers3 },
-  { id: 'mirrors', label: 'SourceForge', icon: Globe },
-  { id: 'stats', label: 'Máy chủ tải', icon: Activity },
-  { id: 'changelog', label: 'Changelog', icon: History },
+  { id: 'archive', label: 'Kho phần mềm', icon: Grid2X2, hidden: false },
+  {
+    id: 'xiaomi',
+    label: 'Xiaomi / HyperOS',
+    icon: SmartphoneIcon,
+    hidden: true,
+  },
+  { id: 'recovery', label: 'Recovery / OFOX', icon: ShieldCheck, hidden: false },
+  { id: 'ota', label: 'Firmware OTA', icon: Layers3, hidden: false },
+  { id: 'mirrors', label: 'SourceForge', icon: Globe, hidden: false },
+  { id: 'stats', label: 'Máy chủ tải', icon: Activity, hidden: false },
+  { id: 'changelog', label: 'Changelog', icon: History, hidden: false },
 ];
 export function Shell({
   children,
@@ -70,6 +75,7 @@ export function Shell({
         .filter((s) => s.enabled)
         .sort((a, b) => a.order - b.order)
         .map((s) => navigation.find((n) => n.id === s.id))
+        .filter((n) => n && !n.hidden)
         .filter(Boolean)
     : navigation;
   return (
