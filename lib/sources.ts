@@ -23,6 +23,12 @@ import {
   type Traffic,
 } from './parsers';
 import { db, settings, overrides, customs, applyOverrides } from './store';
+import {
+  XIAOMI_INDEX_URL,
+  parseXiaomiDevice,
+  parseXiaomiIndex,
+  xiaomiDeviceUrl,
+} from './xiaomi';
 
 type CacheRow = {
   key: string;
@@ -75,6 +81,12 @@ export function permittedMetadataUrl(raw: string) {
     u.hostname === 'sourceforge.net' &&
     u.pathname.startsWith('/projects/oneplus13flashers/files/') &&
     !u.pathname.endsWith('/download')
+  )
+    return u;
+  if (
+    u.hostname === 'data.hyperos.fans' &&
+    ((u.pathname === '/' && !u.search) ||
+      (!u.search && /^\/devices\/[a-z0-9_]+\.json$/i.test(u.pathname)))
   )
     return u;
   const vendor = ['allawnofs.com', 'allawntech.com', 'miui.com'];
@@ -217,18 +229,27 @@ export async function catalog(
   adminView = false,
 ) {
   path = normalizedPath(path);
-  if (!['archive', 'sourceforge'].includes(source))
+  if (!['archive', 'sourceforge', 'xiaomi'].includes(source))
     throw new Error('Nguồn không hợp lệ.');
-  const url = source === 'archive' ? archiveUrl(path) : sfUrl(path);
+  const url =
+    source === 'archive'
+      ? archiveUrl(path)
+      : source === 'sourceforge'
+        ? sfUrl(path)
+        : path
+          ? xiaomiDeviceUrl(path.split('/')[0])
+          : XIAOMI_INDEX_URL;
   const value = await cached<Catalog>(
     `${source}:${path}`,
     url,
     900000,
     async () => {
       const res = await fetchMetadata(url);
-      return source === 'archive'
-        ? parseArchive(res.text, path)
-        : parseSourceForge(res.text, path);
+      if (source === 'archive') return parseArchive(res.text, path);
+      if (source === 'sourceforge') return parseSourceForge(res.text, path);
+      return path
+        ? parseXiaomiDevice(JSON.parse(res.text), path)
+        : parseXiaomiIndex(res.text);
     },
     force,
   );
@@ -313,9 +334,9 @@ export async function findEntry(id: string) {
   const [rows, manual, changes] = await Promise.all([
     db()
       .prepare(
-        'SELECT body FROM source_cache WHERE updated_at>0 AND (key LIKE ? OR key LIKE ? OR key=?) ORDER BY updated_at DESC',
+        'SELECT body FROM source_cache WHERE updated_at>0 AND (key LIKE ? OR key LIKE ? OR key LIKE ? OR key=?) ORDER BY updated_at DESC',
       )
-      .bind('archive:%', 'sourceforge:%', 'ota')
+      .bind('archive:%', 'sourceforge:%', 'xiaomi:%', 'ota')
       .all<{ body: string }>(),
     customs(),
     overrides(),

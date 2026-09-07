@@ -429,8 +429,8 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                     <div className="panel admin-panel">
                       <h2>Hãng & thiết bị</h2>
                       <p className="panel-caption">
-                        OnePlus được bật mặc định. Các hãng khác áp dụng cho cả
-                        kho và OTA.
+                        OnePlus, Xiaomi, Redmi và POCO được bật mặc định. Bộ
+                        lọc áp dụng cho cả kho và OTA.
                       </p>
                       <div className="brand-toggles">
                         {[
@@ -948,6 +948,7 @@ function CatalogManager({
             options={[
               { value: 'archive', label: 'ROM Archive' },
               { value: 'sourceforge', label: 'SourceForge' },
+              { value: 'xiaomi', label: 'Xiaomi / HyperOS' },
               { value: 'ota', label: 'Bản phát hành OTA' },
             ]}
           />
@@ -1499,11 +1500,12 @@ function SyncPanel({
             options={[
               { value: 'archive', label: 'ROM Archive' },
               { value: 'sourceforge', label: 'SourceForge' },
+              { value: 'xiaomi', label: 'Xiaomi / HyperOS' },
               { value: 'ota', label: 'Danh mục OTA' },
               { value: 'stats', label: 'Thống kê máy chủ' },
             ]}
           />
-          {['archive', 'sourceforge'].includes(source) && (
+          {['archive', 'sourceforge', 'xiaomi'].includes(source) && (
             <Field label="Đường dẫn thư mục">
               <Input
                 value={path}

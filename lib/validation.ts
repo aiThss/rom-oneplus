@@ -57,14 +57,14 @@ export function validateSettings(value: unknown): Settings {
   const name = str(o.name, 60);
   if (!name) throw new Error('Tên website không được để trống.');
   const allowed = defaultSettings.sections.map((s) => s.id);
-  const sections = list(o.sections, 6).map((x) => {
+  const sections = list(o.sections, 7).map((x) => {
     const s = obj(x);
     const id = str(s.id);
     if (!allowed.includes(id)) throw new Error('Danh mục không hợp lệ.');
     return { id, enabled: s.enabled === true, order: order(s.order) };
   });
-  if (new Set(sections.map((s) => s.id)).size !== 6)
-    throw new Error('Cần đủ sáu mục điều hướng.');
+  if (new Set(sections.map((s) => s.id)).size !== 7)
+    throw new Error('Cần đủ bảy mục điều hướng.');
   return {
     name,
     logo: url(o.logo, true),

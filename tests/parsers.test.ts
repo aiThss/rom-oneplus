@@ -15,6 +15,7 @@ import {
 } from '../lib/parsers.ts';
 import { defaultSettings, visibleEntry, type Entry } from '../lib/model.ts';
 import { validateSettings, validateCustom } from '../lib/validation.ts';
+import { parseXiaomiDevice, parseXiaomiIndex } from '../lib/xiaomi.ts';
 const path = 'Oneplus 13/Custom Roms';
 void test('archive parses actual folder/file markup and keeps build-specific actions', () => {
   const html = `<div id="browser"></div><div id="download-browser-grid"><a class="folder-badge" href="/index.php?dir=Oneplus+13%2FCustom+Roms%2FcrDroid"><span class="item-name">crDroid</span></a><div class="item-wrapper"><article class="item-file-card"><a class="item-main-link" href="/download.php?file=Files%2FOneplus+13%2FCustom+Roms%2FBuild+A.zip&amp;download=true"><span class="item-name">Build A.zip</span></a><div class="file-info">Size <strong>3.74 GB</strong></div><a class="btn-changelog" href="/index.php?view=changelog&amp;id=build-a">Changelog</a><a href="/index.php?view=arb">ARB: 1</a></article></div></div>`;
@@ -213,4 +214,48 @@ void test('OnePlus aliases share device visibility settings across archive and O
   };
   assert.equal(visibleEntry(entry, config), false);
   assert.equal(visibleEntry(entry, defaultSettings), true);
+  assert.equal(
+    visibleEntry(
+      { device: 'Mi 10', path: 'release', id: 'xiaomi:umi' } as Entry,
+      { ...defaultSettings, brands: ['OnePlus'] },
+    ),
+    false,
+  );
+});
+void test('Xiaomi catalog reads HyperOS device data and builds official downloads', () => {
+  const root = parseXiaomiIndex(
+    '<div><a href="devices/nuwa.json" data-name-en="Xiaomi 13 Pro(nuwa)">Xiaomi</a><a href="devices/nuwa.json" data-name-en="duplicate">Duplicate</a></div>',
+  );
+  assert.equal(root.entries.length, 1);
+  assert.equal(root.entries[0].name, 'Xiaomi 13 Pro');
+  const device = parseXiaomiDevice(
+    {
+      device: 'nuwa',
+      name: { en: 'Xiaomi 13 Pro' },
+      supports: ['OS2.0'],
+      android: ['15.0'],
+      type: 'phone',
+      branches: [
+        {
+          name: { en: 'Xiaomi HyperOS Stable' },
+          region: 'cn',
+          show: '1',
+          roms: {
+            'OS2.0.1.0.VMBCNXM': {
+              android: '15.0',
+              release: '2026-01-02',
+              recovery: 'nuwa-recovery.zip',
+              fastboot: 'nuwa-images.tgz',
+            },
+          },
+        },
+      ],
+    },
+    'nuwa/branch-0',
+  );
+  assert.equal(device.preview?.name, 'Xiaomi 13 Pro');
+  assert.equal(device.preview?.imageUrl, 'https://data.hyperos.fans/assets/images/nuwa.png');
+  assert.equal(device.entries.length, 2);
+  assert.ok(device.entries[0].downloadUrl?.startsWith('https://bigota.d.miui.com/'));
+  assert.ok(device.entries.every((entry) => entry.source === 'xiaomi'));
 });

@@ -1,4 +1,9 @@
-export type Source = 'archive' | 'sourceforge' | 'ota' | 'custom';
+export type Source =
+  | 'archive'
+  | 'sourceforge'
+  | 'xiaomi'
+  | 'ota'
+  | 'custom';
 export type Entry = {
   id: string;
   source: Source;
@@ -34,6 +39,15 @@ export type Catalog = {
   latest: Entry[];
   notes: string[];
   sourceUrl: string;
+  title?: string;
+  preview?: DevicePreview;
+};
+export type DevicePreview = {
+  name: string;
+  sourceUrl: string;
+  imageUrl: string;
+  imageAlt: string;
+  summary: string[];
 };
 export type ZipEntry = {
   kind: 'folder' | 'file';
@@ -96,11 +110,17 @@ export const defaultSettings: Settings = {
   name: 'Kho ROM Việt',
   logo: '/logo.png',
   accent: '#007aff',
-  brands: ['OnePlus'],
+  brands: ['OnePlus', 'Xiaomi', 'Redmi', 'POCO'],
   devices: [],
-  sections: ['archive', 'recovery', 'ota', 'mirrors', 'stats', 'changelog'].map(
-    (id, order) => ({ id, order, enabled: true }),
-  ),
+  sections: [
+    'archive',
+    'xiaomi',
+    'recovery',
+    'ota',
+    'mirrors',
+    'stats',
+    'changelog',
+  ].map((id, order) => ({ id, order, enabled: true })),
   groups: [],
   donate: {
     enabled: true,
@@ -135,7 +155,7 @@ export function brandOf(device: string) {
   if (/^realme/i.test(device)) return 'Realme';
   if (/^redmi/i.test(device)) return 'Redmi';
   if (/^poco/i.test(device)) return 'POCO';
-  if (/^xiaomi/i.test(device)) return 'Xiaomi';
+  if (/^(xiaomi|mi\s)/i.test(device)) return 'Xiaomi';
   return '';
 }
 export function displayName(name: string) {

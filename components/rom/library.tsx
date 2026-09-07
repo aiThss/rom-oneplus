@@ -60,6 +60,7 @@ import {
   type ZipBrowser,
   type ZipEntry,
   type SiteLog,
+  type DevicePreview,
 } from '@/lib/model';
 import type { Traffic } from '@/lib/parsers';
 import { deviceSpecFor } from '@/lib/device-specs';
@@ -175,27 +176,42 @@ function Freshness({ value }: { value: Cached<unknown> }) {
     </div>
   );
 }
-function DevicePreviewCompact({ device }: { device: string }) {
+function DevicePreviewCompact({
+  device,
+  preview,
+}: {
+  device: string;
+  preview?: DevicePreview;
+}) {
   const spec = deviceSpecFor(device);
-  if (!spec) return null;
+  const value =
+    preview ||
+    (spec && {
+      name: spec.name,
+      sourceUrl: spec.sourceUrl,
+      imageUrl: spec.imageUrl,
+      imageAlt: spec.imageAlt,
+      summary: [spec.display, spec.chipset, spec.battery],
+    });
+  if (!value) return null;
   return (
     <a
       className="device-preview-compact"
-      href={spec.sourceUrl}
+      href={value.sourceUrl}
       target="_blank"
       rel="noreferrer"
-      aria-label={`Xem cấu hình ${spec.name} trên GSMArena`}
+      aria-label={`Xem cấu hình ${value.name} trên ${
+        spec ? 'GSMArena' : 'HyperOS.fans'
+      }`}
     >
       <div className="device-preview-compact-media">
-        <img src={spec.imageUrl} alt={spec.imageAlt} />
+        <img src={value.imageUrl} alt={value.imageAlt} />
       </div>
       <div className="device-preview-compact-copy">
         <span className="device-preview-compact-label">CẤU HÌNH TÓM TẮT</span>
-        <strong>{spec.name}</strong>
+        <strong>{value.name}</strong>
         <span className="device-preview-compact-specs">
-          {spec.display.split(' · ').slice(0, 2).join(' · ')}
-          {' · '}
-          {spec.battery.split(' · ')[0]}
+          {value.summary.slice(0, 2).join(' · ')}
         </span>
       </div>
       <ArrowUpRight size={15} aria-hidden="true" />
@@ -203,7 +219,12 @@ function DevicePreviewCompact({ device }: { device: string }) {
   );
 }
 function ArchiveView({ view, path }: { view: string; path: string }) {
-  const source = view === 'mirrors' ? 'sourceforge' : 'archive';
+  const source =
+    view === 'mirrors'
+      ? 'sourceforge'
+      : view === 'xiaomi'
+        ? 'xiaomi'
+        : 'archive';
   const result = useRemote<Cached<Catalog>>(
     `/api/catalog?source=${source}&path=${encodeURIComponent(path)}`,
   );
@@ -220,7 +241,9 @@ function ArchiveView({ view, path }: { view: string; path: string }) {
   const deviceRoot = path.split('/')[0];
   const sourceNotes = (data?.notes ?? []).map(translateTechnicalNote);
   const technicalNotes =
-    path && deviceSpecFor(deviceRoot) && !sourceNotes.includes(CHINA_DEVICE_NOTE)
+    path &&
+    (deviceSpecFor(deviceRoot) || data?.preview) &&
+    !sourceNotes.includes(CHINA_DEVICE_NOTE)
       ? [CHINA_DEVICE_NOTE, ...sourceNotes]
       : sourceNotes;
   const entries = useMemo(() => {
@@ -287,33 +310,50 @@ function ArchiveView({ view, path }: { view: string; path: string }) {
     return () => ctrl.abort();
   }, [data, path, kind]);
   const title = path
-    ? displayName(path.split('/').at(-1)!)
+    ? data?.title || displayName(path.split('/').at(-1)!)
     : view === 'mirrors'
       ? 'Kho lưu trữ SourceForge'
-      : 'Chọn thiết bị của bạn';
+      : view === 'xiaomi'
+        ? 'Chọn thiết bị Xiaomi'
+        : 'Chọn thiết bị của bạn';
   return (
     <>
       <Heading
         eyebrow={
-          view === 'mirrors' ? 'SourceForge Mirrors' : 'Thư viện phần mềm'
+          view === 'mirrors'
+            ? 'SourceForge Mirrors'
+            : view === 'xiaomi'
+              ? 'XIAOMI / HYPEROS'
+              : 'Thư viện phần mềm'
         }
         title={title}
         description={
           path
-            ? displayName(path.split('/')[0]) +
+            ? (view === 'xiaomi'
+                ? data?.preview?.name || displayName(path.split('/')[0])
+                : displayName(path.split('/')[0])) +
               ' · Chọn thư mục hoặc bản phần mềm cần tải.'
             : view === 'mirrors'
               ? 'Các bản lưu trữ và gói tải bổ sung từ SourceForge.'
-              : 'Kho lưu trữ ROM tùy biến, firmware gốc, recovery và công cụ cứu máy.'
+              : view === 'xiaomi'
+                ? 'ROM HyperOS cho Xiaomi, Redmi và POCO; chọn đúng mã máy và khu vực trước khi tải.'
+                : 'Kho lưu trữ ROM tùy biến, firmware gốc, recovery và công cụ cứu máy.'
         }
         extra={
           <div className="heading-actions">
-            {path && deviceSpecFor(path) ? (
-              <DevicePreviewCompact device={path} />
+            {path && (data?.preview || deviceSpecFor(deviceRoot)) ? (
+              <DevicePreviewCompact
+                device={deviceRoot}
+                preview={data?.preview}
+              />
             ) : (
               <span className="subtle-pill">
                 <HardDrive size={15} />
-                {view === 'mirrors' ? 'SourceForge' : 'ROM Archive'}
+                {view === 'mirrors'
+                  ? 'SourceForge'
+                  : view === 'xiaomi'
+                    ? 'HyperOS.fans'
+                    : 'ROM Archive'}
               </span>
             )}
           </div>
@@ -321,7 +361,9 @@ function ArchiveView({ view, path }: { view: string; path: string }) {
       />
       {path && (
         <nav className="breadcrumbs" aria-label="Đường dẫn">
-          <a href={browse(view)}>Thiết bị</a>
+          <a href={browse(view)}>
+            {view === 'xiaomi' ? 'Thiết bị Xiaomi' : 'Thiết bị'}
+          </a>
           {path.split('/').map((part, i) => (
             <span key={i}>
               <ChevronRight size={13} />
@@ -334,7 +376,11 @@ function ArchiveView({ view, path }: { view: string; path: string }) {
                     .join('/'),
                 )}
               >
-                {displayName(part)}
+                {view === 'xiaomi' && i === 0
+                  ? data?.preview?.name || displayName(part)
+                  : view === 'xiaomi' && i === 1
+                    ? data?.title || displayName(part)
+                    : displayName(part)}
               </a>
             </span>
           ))}
@@ -416,7 +462,9 @@ function ArchiveView({ view, path }: { view: string; path: string }) {
             href={
               source === 'archive'
                 ? 'https://roms.danielspringer.at/'
-                : 'https://sourceforge.net/projects/oneplus13flashers/files/'
+                : source === 'xiaomi'
+                  ? 'https://hyperos.fans/en/devices/'
+                  : 'https://sourceforge.net/projects/oneplus13flashers/files/'
             }
           >
             Mở kho nguồn
@@ -432,13 +480,18 @@ function ArchiveView({ view, path }: { view: string; path: string }) {
               </div>
               <div className="device-grid">
                 {folders.map((entry, i) => {
+                  const xiaomiDevice = view === 'xiaomi' && !path;
                   const Icon = path
                     ? Folder
                     : /pad/i.test(entry.name)
                       ? Tablet
-                      : /oneplus|oppo|realme/i.test(entry.name)
+                      : xiaomiDevice
                         ? Smartphone
-                        : HardDrive;
+                        : /oneplus|oppo|realme|xiaomi|redmi|poco/i.test(
+                              entry.name,
+                            )
+                          ? Smartphone
+                          : HardDrive;
                   return (
                     <a
                       className="device-card"
@@ -454,9 +507,13 @@ function ArchiveView({ view, path }: { view: string; path: string }) {
                             ? 'Thư mục'
                             : /pad/i.test(entry.name)
                               ? 'Máy tính bảng'
-                              : /oneplus|oppo|realme/i.test(entry.name)
-                                ? 'Điện thoại'
-                                : 'Công cụ'}
+                              : xiaomiDevice
+                                ? 'Điện thoại / máy tính bảng'
+                                : /oneplus|oppo|realme|xiaomi|redmi|poco/i.test(
+                                      entry.name,
+                                    )
+                                  ? 'Điện thoại'
+                                  : 'Công cụ'}
                         </span>
                         <h3>{displayName(entry.name)}</h3>
                         <p>{entry.description || 'Xem thư mục'}</p>
@@ -716,10 +773,12 @@ export function EntrySheet({
                         {value.source === 'ota'
                           ? 'Danh mục OTA'
                           : value.source === 'sourceforge'
-                            ? 'SourceForge'
-                            : value.source === 'custom'
-                              ? 'Liên kết bổ sung'
-                              : 'ROM Archive'}
+                              ? 'SourceForge'
+                              : value.source === 'xiaomi'
+                                ? 'HyperOS.fans'
+                                : value.source === 'custom'
+                                  ? 'Liên kết bổ sung'
+                                  : 'ROM Archive'}
                       </strong>
                     </div>
                     {value.published && (

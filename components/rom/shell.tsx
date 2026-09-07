@@ -16,6 +16,7 @@ import {
   Sun,
   ArrowUpRight,
   Menu,
+  Smartphone,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -26,8 +27,10 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
+const SmartphoneIcon = Smartphone;
 export const navigation = [
   { id: 'archive', label: 'Kho phần mềm', icon: Grid2X2 },
+  { id: 'xiaomi', label: 'Xiaomi / HyperOS', icon: SmartphoneIcon },
   { id: 'recovery', label: 'Recovery / OFOX', icon: ShieldCheck },
   { id: 'ota', label: 'Firmware OTA', icon: Layers3 },
   { id: 'mirrors', label: 'SourceForge', icon: Globe },
