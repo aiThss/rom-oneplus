@@ -1088,6 +1088,13 @@ textarea {
 .technical-note li {
   margin: 7px 0;
 }
+.technical-note li.china-device-note {
+  color: #d75c2f;
+  font-weight: 700;
+}
+.dark .technical-note li.china-device-note {
+  color: #ffad7a;
+}
 .entry-sheet {
   width: min(640px, 100vw) !important;
   max-width: 640px !important;

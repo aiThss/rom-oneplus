@@ -357,7 +357,12 @@ function ArchiveView({ view, path }: { view: string; path: string }) {
           </summary>
           <ul>
             {technicalNotes.map((n, i) => (
-              <li key={i} className={isArb(n) ? 'arb-text' : ''}>
+              <li
+                key={i}
+                className={`${isArb(n) ? 'arb-text' : ''}${
+                  n === CHINA_DEVICE_NOTE ? ' china-device-note' : ''
+                }`}
+              >
                 {isArb(n) ? (
                   <span className="arb-tag">
                     <TriangleAlert size={12} />
