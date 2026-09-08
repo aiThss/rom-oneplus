@@ -146,7 +146,8 @@ export function Library() {
             path={loc.path}
             brand={
               activeView === 'archive'
-                ? loc.brand || (loc.view === 'xiaomi' && loc.path ? 'xiaomi' : '')
+                ? loc.brand ||
+                  (loc.view === 'xiaomi' && loc.path ? 'xiaomi' : '')
                 : ''
             }
           />
@@ -263,7 +264,10 @@ const BRAND_CHOICES = [
 
 function BrandChooser() {
   return (
-    <section className="brand-chooser panel" aria-labelledby="brand-chooser-title">
+    <section
+      className="brand-chooser panel"
+      aria-labelledby="brand-chooser-title"
+    >
       <div className="brand-chooser-heading">
         <span className="eyebrow">THƯ VIỆN THIẾT BỊ</span>
         <h2 id="brand-chooser-title">Bạn đang sử dụng hãng điện thoại gì?</h2>
@@ -279,7 +283,7 @@ function BrandChooser() {
             <div className={`brand-choice-symbol tone-${i % 3}`}>
               <Smartphone size={23} />
             </div>
-            <div>
+            <div className="brand-choice-info">
               <span className="meta">{brand.source}</span>
               <h3>{brand.name}</h3>
               <p>{brand.description}</p>
@@ -437,9 +441,9 @@ function ArchiveView({
                 <HardDrive size={15} />
                 {view === 'mirrors'
                   ? 'SourceForge'
-              : brandChoice && brandChoice.id !== 'oneplus'
-                ? 'HyperOS.fans'
-                : 'ROM Archive'}
+                  : brandChoice && brandChoice.id !== 'oneplus'
+                    ? 'HyperOS.fans'
+                    : 'ROM Archive'}
               </span>
             )}
           </div>
@@ -522,168 +526,169 @@ function ArchiveView({
       ) : (
         <>
           <div className="toolbar">
-        <div className="search-box">
-          <Search size={19} />
-          <Input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={path ? 'Tìm tên trong thư mục này…' : 'Tìm thiết bị…'}
-            aria-label="Tìm trong danh mục"
-          />
-        </div>
-        <SelectField
-          label="Hiển thị"
-          value={kind}
-          onChange={setKind}
-          options={[
-            { value: 'all', label: 'Tất cả' },
-            { value: 'folder', label: 'Thư mục' },
-            { value: 'file', label: 'Gói phần mềm' },
-            { value: 'link', label: 'Tài liệu' },
-          ]}
-        />
-        <SelectField
-          label="Sắp xếp"
-          value={sort}
-          onChange={setSort}
-          options={[
-            { value: 'source', label: 'Theo nguồn' },
-            { value: 'name', label: 'Tên A–Z' },
-          ]}
-        />
-          </div>
-      {result.loading ? (
-        <Loading />
-      ) : result.error ? (
-        <>
-          <ErrorState error={result.error} retry={result.reload} />
-          <External
-            href={
-              source === 'archive'
-                ? 'https://roms.danielspringer.at/'
-                : source === 'xiaomi'
-                  ? 'https://hyperos.fans/en/devices/'
-                  : 'https://sourceforge.net/projects/oneplus13flashers/files/'
-            }
-          >
-            Mở kho nguồn
-          </External>
-        </>
-      ) : (
-        <>
-          {folders.length > 0 && (
-            <>
-              <div className="section-title">
-                <h2>{path ? 'Thư mục' : 'Thiết bị & công cụ'}</h2>
-                <span>{folders.length} mục</span>
-              </div>
-              <div className="device-grid">
-                {folders.map((entry, i) => {
-                  const xiaomiDevice =
-                    source === 'xiaomi' && !path && Boolean(brandChoice);
-                  const Icon = path
-                    ? Folder
-                    : /pad/i.test(entry.name)
-                      ? Tablet
-                      : xiaomiDevice
-                        ? Smartphone
-                        : /oneplus|oppo|realme|xiaomi|redmi|poco/i.test(
-                              entry.name,
-                            )
-                          ? Smartphone
-                          : HardDrive;
-                  return (
-                    <a
-                      className="device-card"
-                      href={browse(view, entry.path, brand)}
-                      key={entry.id}
-                    >
-                      <div className={`device-symbol tone-${i % 3}`}>
-                        <Icon size={22} />
-                      </div>
-                      <div className="device-info">
-                        <span className="meta">
-                          {path
-                            ? 'Thư mục'
-                            : /pad/i.test(entry.name)
-                              ? 'Máy tính bảng'
-                              : xiaomiDevice
-                                ? 'Điện thoại / máy tính bảng'
-                                : /oneplus|oppo|realme|xiaomi|redmi|poco/i.test(
-                                      entry.name,
-                                    )
-                                  ? 'Điện thoại'
-                                  : 'Công cụ'}
-                        </span>
-                        <h3>{displayName(entry.name)}</h3>
-                        <p>{entry.description || 'Xem thư mục'}</p>
-                      </div>
-                      <div className="device-arrow">
-                        <ArrowUpRight size={17} />
-                      </div>
-                    </a>
-                  );
-                })}
-              </div>
-            </>
-          )}
-          {files.length > 0 && (
-            <>
-              <div className="section-title">
-                <h2>Bản phần mềm & tài liệu</h2>
-                <span>{files.length} mục</span>
-              </div>
-              <div className="file-list">
-                {files.map((e) => (
-                  <FileRow
-                    key={e.id}
-                    entry={e}
-                    onSelect={setSelected}
-                    onBrowseZip={setZipEntry}
-                  />
-                ))}
-              </div>
-            </>
-          )}
-          {!entries.length && (
-            <EmptyState
-              title={
-                query ? 'Không tìm thấy kết quả' : 'Phần mềm chưa được thêm vào'
-              }
-              description={
-                query
-                  ? 'Thử tên thiết bị, phiên bản hoặc từ khóa ngắn hơn.'
-                  : 'Chưa có kết quả phù hợp với các bộ lọc hiện tại.'
-              }
+            <div className="search-box">
+              <Search size={19} />
+              <Input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={
+                  path ? 'Tìm tên trong thư mục này…' : 'Tìm thiết bị…'
+                }
+                aria-label="Tìm trong danh mục"
+              />
+            </div>
+            <SelectField
+              label="Hiển thị"
+              value={kind}
+              onChange={setKind}
+              options={[
+                { value: 'all', label: 'Tất cả' },
+                { value: 'folder', label: 'Thư mục' },
+                { value: 'file', label: 'Gói phần mềm' },
+                { value: 'link', label: 'Tài liệu' },
+              ]}
             />
-          )}
-          {!path && !query && data?.latest.length ? (
+            <SelectField
+              label="Sắp xếp"
+              value={sort}
+              onChange={setSort}
+              options={[
+                { value: 'source', label: 'Theo nguồn' },
+                { value: 'name', label: 'Tên A–Z' },
+              ]}
+            />
+          </div>
+          {result.loading ? (
+            <Loading />
+          ) : result.error ? (
             <>
-              <div className="section-title">
-                <h2>Những cập nhật mới...</h2>
-                <span>Cập nhật gần đây</span>
-              </div>
-              <div className="file-list">
-                {data.latest.map((e) => (
-                  <FileRow
-                    key={e.id}
-                    entry={e}
-                    onSelect={setSelected}
-                    onBrowseZip={setZipEntry}
-                    compact
-                  />
-                ))}
-              </div>
+              <ErrorState error={result.error} retry={result.reload} />
+              <External
+                href={
+                  source === 'archive'
+                    ? 'https://roms.danielspringer.at/'
+                    : source === 'xiaomi'
+                      ? 'https://hyperos.fans/en/devices/'
+                      : 'https://sourceforge.net/projects/oneplus13flashers/files/'
+                }
+              >
+                Mở kho nguồn
+              </External>
             </>
-          ) : null}
-          {result.data && <Freshness value={result.data} />}
-        </>
-      )}
-      <EntrySheet entry={selected} onClose={() => setSelected(null)} />
-      <ZipBrowserSheet
-        entry={zipEntry}
-        onClose={() => setZipEntry(null)}
-      />
+          ) : (
+            <>
+              {folders.length > 0 && (
+                <>
+                  <div className="section-title">
+                    <h2>{path ? 'Thư mục' : 'Thiết bị & công cụ'}</h2>
+                    <span>{folders.length} mục</span>
+                  </div>
+                  <div className="device-grid">
+                    {folders.map((entry, i) => {
+                      const xiaomiDevice =
+                        source === 'xiaomi' && !path && Boolean(brandChoice);
+                      const Icon = path
+                        ? Folder
+                        : /pad/i.test(entry.name)
+                          ? Tablet
+                          : xiaomiDevice
+                            ? Smartphone
+                            : /oneplus|oppo|realme|xiaomi|redmi|poco/i.test(
+                                  entry.name,
+                                )
+                              ? Smartphone
+                              : HardDrive;
+                      return (
+                        <a
+                          className="device-card"
+                          href={browse(view, entry.path, brand)}
+                          key={entry.id}
+                        >
+                          <div className={`device-symbol tone-${i % 3}`}>
+                            <Icon size={22} />
+                          </div>
+                          <div className="device-info">
+                            <span className="meta">
+                              {path
+                                ? 'Thư mục'
+                                : /pad/i.test(entry.name)
+                                  ? 'Máy tính bảng'
+                                  : xiaomiDevice
+                                    ? 'Điện thoại / máy tính bảng'
+                                    : /oneplus|oppo|realme|xiaomi|redmi|poco/i.test(
+                                          entry.name,
+                                        )
+                                      ? 'Điện thoại'
+                                      : 'Công cụ'}
+                            </span>
+                            <h3>{displayName(entry.name)}</h3>
+                            <p>{entry.description || 'Xem thư mục'}</p>
+                          </div>
+                          <div className="device-arrow">
+                            <ArrowUpRight size={17} />
+                          </div>
+                        </a>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+              {files.length > 0 && (
+                <>
+                  <div className="section-title">
+                    <h2>Bản phần mềm & tài liệu</h2>
+                    <span>{files.length} mục</span>
+                  </div>
+                  <div className="file-list">
+                    {files.map((e) => (
+                      <FileRow
+                        key={e.id}
+                        entry={e}
+                        onSelect={setSelected}
+                        onBrowseZip={setZipEntry}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+              {!entries.length && (
+                <EmptyState
+                  title={
+                    query
+                      ? 'Không tìm thấy kết quả'
+                      : 'Phần mềm chưa được thêm vào'
+                  }
+                  description={
+                    query
+                      ? 'Thử tên thiết bị, phiên bản hoặc từ khóa ngắn hơn.'
+                      : 'Chưa có kết quả phù hợp với các bộ lọc hiện tại.'
+                  }
+                />
+              )}
+              {!path && !query && data?.latest.length ? (
+                <>
+                  <div className="section-title">
+                    <h2>Những cập nhật mới...</h2>
+                    <span>Cập nhật gần đây</span>
+                  </div>
+                  <div className="file-list">
+                    {data.latest.map((e) => (
+                      <FileRow
+                        key={e.id}
+                        entry={e}
+                        onSelect={setSelected}
+                        onBrowseZip={setZipEntry}
+                        compact
+                      />
+                    ))}
+                  </div>
+                </>
+              ) : null}
+              {result.data && <Freshness value={result.data} />}
+            </>
+          )}
+          <EntrySheet entry={selected} onClose={() => setSelected(null)} />
+          <ZipBrowserSheet entry={zipEntry} onClose={() => setZipEntry(null)} />
         </>
       )}
     </>
@@ -735,18 +740,18 @@ export function FileRow({
           entry.source === 'archive' &&
           entry.kind === 'file' &&
           onBrowseZip && (
-          <Button
-            variant="outline"
-            className="action zip-action"
-            onClick={(event) => {
-              event.stopPropagation();
-              onBrowseZip(entry);
-            }}
-          >
-            <Folder size={15} />
-            Browse ZIP
-          </Button>
-        )}
+            <Button
+              variant="outline"
+              className="action zip-action"
+              onClick={(event) => {
+                event.stopPropagation();
+                onBrowseZip(entry);
+              }}
+            >
+              <Folder size={15} />
+              Browse ZIP
+            </Button>
+          )}
         <Button
           variant="outline"
           className="action"
@@ -827,250 +832,252 @@ export function EntrySheet({
         }}
       >
         <SheetContent className="entry-sheet" showCloseButton={false}>
-        <SheetClose
-          render={
-            <Button variant="ghost" size="icon" className="sheet-close" />
-          }
-          aria-label="Đóng chi tiết"
-        >
-          <X size={20} />
-        </SheetClose>
-        {value && (
-          <>
-            <SheetHeader>
-              <div className="sheet-icon">
-                <Download size={26} />
-              </div>
-              <SheetTitle className="sheet-title">{value.name}</SheetTitle>
-              <SheetDescription>
-                {displayName(value.device || 'Phần mềm')}{' '}
-                {value.region && '· ' + value.region}
-                {value.notes?.filter(isArb).map((note, i) => (
-                  <span key={i} className="arb-tag arb-tag-large">
-                    <TriangleAlert size={12} />
-                    <strong>{note}</strong>
-                  </span>
-                ))}
-              </SheetDescription>
-            </SheetHeader>
-            <div className="sheet-body">
-              <Tabs value={tab} onValueChange={(v) => setTab(String(v))}>
-                <TabsList className="wide-tabs">
-                  <TabsTrigger value="info">Thông tin & tải</TabsTrigger>
-                  <TabsTrigger value="changelog">Changelog</TabsTrigger>
-                </TabsList>
-                <TabsContent value="info">
-                  <div className="detail-grid">
-                    <div>
-                      <span>Dung lượng</span>
-                      <strong>
-                        {value.size
-                          ? formatBytes(value.size)
-                          : value.sizeLabel || 'Chưa có dữ liệu'}
-                      </strong>
-                    </div>
-                    <div>
-                      <span>Nguồn</span>
-                      <strong>
-                        {value.source === 'ota'
-                          ? 'Danh mục OTA'
-                          : value.source === 'sourceforge'
+          <SheetClose
+            render={
+              <Button variant="ghost" size="icon" className="sheet-close" />
+            }
+            aria-label="Đóng chi tiết"
+          >
+            <X size={20} />
+          </SheetClose>
+          {value && (
+            <>
+              <SheetHeader>
+                <div className="sheet-icon">
+                  <Download size={26} />
+                </div>
+                <SheetTitle className="sheet-title">{value.name}</SheetTitle>
+                <SheetDescription>
+                  {displayName(value.device || 'Phần mềm')}{' '}
+                  {value.region && '· ' + value.region}
+                  {value.notes?.filter(isArb).map((note, i) => (
+                    <span key={i} className="arb-tag arb-tag-large">
+                      <TriangleAlert size={12} />
+                      <strong>{note}</strong>
+                    </span>
+                  ))}
+                </SheetDescription>
+              </SheetHeader>
+              <div className="sheet-body">
+                <Tabs value={tab} onValueChange={(v) => setTab(String(v))}>
+                  <TabsList className="wide-tabs">
+                    <TabsTrigger value="info">Thông tin & tải</TabsTrigger>
+                    <TabsTrigger value="changelog">Changelog</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="info">
+                    <div className="detail-grid">
+                      <div>
+                        <span>Dung lượng</span>
+                        <strong>
+                          {value.size
+                            ? formatBytes(value.size)
+                            : value.sizeLabel || 'Chưa có dữ liệu'}
+                        </strong>
+                      </div>
+                      <div>
+                        <span>Nguồn</span>
+                        <strong>
+                          {value.source === 'ota'
+                            ? 'Danh mục OTA'
+                            : value.source === 'sourceforge'
                               ? 'SourceForge'
                               : value.source === 'xiaomi'
                                 ? 'HyperOS.fans'
                                 : value.source === 'custom'
                                   ? 'Liên kết bổ sung'
                                   : 'ROM Archive'}
-                      </strong>
-                    </div>
-                    {value.published && (
-                      <div>
-                        <span>Ngày phát hành</span>
-                        <strong>
-                          {new Date(value.published).toLocaleDateString(
-                            'vi-VN',
-                          )}
                         </strong>
                       </div>
-                    )}
-                  </div>
-                  {value.description && (
-                    <Markdown content={value.description} className="preserve-text" />
-                  )}
-                  <div className="checksum">
-                    <span className="field-label">
-                      {value.checksumType || 'Checksum'}
-                    </span>
-                    {detail.loading ? (
-                      <p>Đang kiểm tra checksum…</p>
-                    ) : value.checksum ? (
-                      <>
-                        <code>{value.checksum}</code>
-                        <CopyButton
-                          value={value.checksum}
-                          label="Sao chép checksum"
-                        />
-                      </>
-                    ) : (
-                      <p>Nguồn chưa cung cấp checksum đã xác minh.</p>
-                    )}
-                  </div>
-                  {detail.error && (
-                    <p className="field-error">{detail.error}</p>
-                  )}
-                  {value.notes?.length ? (
-                    <div className="notes-container">
-                      {value.notes.map((n, i) => {
-                        const arb = isArb(n);
-                        return (
-                          <div
-                            key={i}
-                            className={`notice ${arb ? 'arb-notice' : ''}`}
-                          >
-                            {arb ? (
-                              <TriangleAlert size={20} className="arb-icon" />
-                            ) : (
-                              <ShieldCheck size={18} />
+                      {value.published && (
+                        <div>
+                          <span>Ngày phát hành</span>
+                          <strong>
+                            {new Date(value.published).toLocaleDateString(
+                              'vi-VN',
                             )}
-                            <div>
-                              <p className={arb ? 'arb-text' : ''}>
-                                {arb ? (
-                                  <strong>
-                                    {n} (Cảnh báo chống hạ cấp Anti-Rollback)
-                                  </strong>
-                                ) : (
-                                  n
-                                )}
-                              </p>
-                              {arb && (
-                                <p className="arb-warning-sub">
-                                  Hạ cấp xuống bản có chỉ số ARB thấp hơn có thể làm máy mất nguồn / hard brick hoàn toàn!
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
+                          </strong>
+                        </div>
+                      )}
                     </div>
-                  ) : null}
-                  <div className="download-box">
-                    <h3>
-                      {value.source === 'ota'
-                        ? 'Tải qua công cụ OTA'
-                        : 'Liên kết tải'}
-                    </h3>
-                    <p>
-                      {value.source === 'ota'
-                        ? 'Mở công cụ nguồn, chọn đúng thiết bị, khu vực và phiên bản bên dưới.'
-                        : 'File được cung cấp bởi máy chủ nguồn.'}
-                    </p>
-                    <div className="action-row">
-                      {value.downloadUrl ? (
+                    {value.description && (
+                      <Markdown
+                        content={value.description}
+                        className="preserve-text"
+                      />
+                    )}
+                    <div className="checksum">
+                      <span className="field-label">
+                        {value.checksumType || 'Checksum'}
+                      </span>
+                      {detail.loading ? (
+                        <p>Đang kiểm tra checksum…</p>
+                      ) : value.checksum ? (
                         <>
-                          <External href={value.downloadUrl} primary>
-                            Tải xuống
-                          </External>
+                          <code>{value.checksum}</code>
                           <CopyButton
-                            value={value.downloadUrl}
-                            label="Sao chép link"
+                            value={value.checksum}
+                            label="Sao chép checksum"
                           />
                         </>
                       ) : (
-                        <External href={value.sourceUrl} primary>
-                          {value.source === 'ota'
-                            ? 'Mở công cụ OTA'
-                            : 'Mở trang phát hành'}
-                        </External>
-                      )}
-                      {(value.downloadUrl || value.sourceUrl) && (
-                        <TelegramMirrorButton
-                          url={value.downloadUrl || value.sourceUrl}
-                        />
+                        <p>Nguồn chưa cung cấp checksum đã xác minh.</p>
                       )}
                     </div>
-                    {value.source === 'ota' && (
-                      <>
-                        <code className="ota-version">{value.version}</code>
-                        <CopyButton
-                          value={value.version || value.name}
-                          label="Sao chép phiên bản"
-                        />
-                      </>
+                    {detail.error && (
+                      <p className="field-error">{detail.error}</p>
                     )}
-                    {value.mirrors?.map((m, i) => (
-                      <div className="mirror-row" key={i}>
-                        <External href={m.url}>{m.name}</External>
-                        <CopyButton value={m.url} label="Chép link" />
+                    {value.notes?.length ? (
+                      <div className="notes-container">
+                        {value.notes.map((n, i) => {
+                          const arb = isArb(n);
+                          return (
+                            <div
+                              key={i}
+                              className={`notice ${arb ? 'arb-notice' : ''}`}
+                            >
+                              {arb ? (
+                                <TriangleAlert size={20} className="arb-icon" />
+                              ) : (
+                                <ShieldCheck size={18} />
+                              )}
+                              <div>
+                                <p className={arb ? 'arb-text' : ''}>
+                                  {arb ? (
+                                    <strong>
+                                      {n} (Cảnh báo chống hạ cấp Anti-Rollback)
+                                    </strong>
+                                  ) : (
+                                    n
+                                  )}
+                                </p>
+                                {arb && (
+                                  <p className="arb-warning-sub">
+                                    Hạ cấp xuống bản có chỉ số ARB thấp hơn có
+                                    thể làm máy mất nguồn / hard brick hoàn
+                                    toàn!
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
-                    ))}
-                  </div>
-                  {value.toolsUrl &&
-                    value.source === 'archive' &&
-                    value.kind === 'file' && (
-                    <div className="action-row zip-actions">
-                      <Button
-                        variant="outline"
-                        className="action"
-                        onClick={() => setZipEntry(value)}
-                      >
-                        <Folder size={15} />
-                        Browse ZIP
-                      </Button>
-                      <External href={value.toolsUrl}>Mở nguồn</External>
-                    </div>
-                  )}
-                  <div className="source-bottom">
-                    <External href={value.sourceUrl}>Trang nguồn</External>
-                  </div>
-                </TabsContent>
-                <TabsContent value="changelog">
-                  {changes.loading ? (
-                    <Loading />
-                  ) : changes.error ? (
-                    <ErrorState error={changes.error} />
-                  ) : changes.data ? (
-                    <>
+                    ) : null}
+                    <div className="download-box">
+                      <h3>
+                        {value.source === 'ota'
+                          ? 'Tải qua công cụ OTA'
+                          : 'Liên kết tải'}
+                      </h3>
+                      <p>
+                        {value.source === 'ota'
+                          ? 'Mở công cụ nguồn, chọn đúng thiết bị, khu vực và phiên bản bên dưới.'
+                          : 'File được cung cấp bởi máy chủ nguồn.'}
+                      </p>
                       <div className="action-row">
-                        {changes.data.vi && (
+                        {value.downloadUrl ? (
+                          <>
+                            <External href={value.downloadUrl} primary>
+                              Tải xuống
+                            </External>
+                            <CopyButton
+                              value={value.downloadUrl}
+                              label="Sao chép link"
+                            />
+                          </>
+                        ) : (
+                          <External href={value.sourceUrl} primary>
+                            {value.source === 'ota'
+                              ? 'Mở công cụ OTA'
+                              : 'Mở trang phát hành'}
+                          </External>
+                        )}
+                        {(value.downloadUrl || value.sourceUrl) && (
+                          <TelegramMirrorButton
+                            url={value.downloadUrl || value.sourceUrl}
+                          />
+                        )}
+                      </div>
+                      {value.source === 'ota' && (
+                        <>
+                          <code className="ota-version">{value.version}</code>
+                          <CopyButton
+                            value={value.version || value.name}
+                            label="Sao chép phiên bản"
+                          />
+                        </>
+                      )}
+                      {value.mirrors?.map((m, i) => (
+                        <div className="mirror-row" key={i}>
+                          <External href={m.url}>{m.name}</External>
+                          <CopyButton value={m.url} label="Chép link" />
+                        </div>
+                      ))}
+                    </div>
+                    {value.toolsUrl &&
+                      value.source === 'archive' &&
+                      value.kind === 'file' && (
+                        <div className="action-row zip-actions">
                           <Button
                             variant="outline"
                             className="action"
-                            onClick={() => setOriginal(!original)}
+                            onClick={() => setZipEntry(value)}
                           >
-                            {original ? 'Xem tiếng Việt' : 'Xem bản gốc'}
+                            <Folder size={15} />
+                            Browse ZIP
                           </Button>
-                        )}
-                        {changes.data.sourceUrl && (
-                          <External href={changes.data.sourceUrl}>
-                            Mở changelog gốc
-                          </External>
-                        )}
-                      </div>
-                      {changes.data.error && (
-                        <p className="field-error">{changes.data.error}</p>
+                          <External href={value.toolsUrl}>Mở nguồn</External>
+                        </div>
                       )}
-                      <div className="changelog-text">
-                        <Markdown
-                          content={
-                            (!original && changes.data.vi) ||
-                            changes.data.original ||
-                            'Bản phát hành này chưa có nội dung changelog. Khi nguồn có liên kết, bạn có thể mở bản gốc ở trên.'
-                          }
-                        />
-                      </div>
-                    </>
-                  ) : null}
-                </TabsContent>
-              </Tabs>
-            </div>
-          </>
-        )}
+                    <div className="source-bottom">
+                      <External href={value.sourceUrl}>Trang nguồn</External>
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="changelog">
+                    {changes.loading ? (
+                      <Loading />
+                    ) : changes.error ? (
+                      <ErrorState error={changes.error} />
+                    ) : changes.data ? (
+                      <>
+                        <div className="action-row">
+                          {changes.data.vi && (
+                            <Button
+                              variant="outline"
+                              className="action"
+                              onClick={() => setOriginal(!original)}
+                            >
+                              {original ? 'Xem tiếng Việt' : 'Xem bản gốc'}
+                            </Button>
+                          )}
+                          {changes.data.sourceUrl && (
+                            <External href={changes.data.sourceUrl}>
+                              Mở changelog gốc
+                            </External>
+                          )}
+                        </div>
+                        {changes.data.error && (
+                          <p className="field-error">{changes.data.error}</p>
+                        )}
+                        <div className="changelog-text">
+                          <Markdown
+                            content={
+                              (!original && changes.data.vi) ||
+                              changes.data.original ||
+                              'Bản phát hành này chưa có nội dung changelog. Khi nguồn có liên kết, bạn có thể mở bản gốc ở trên.'
+                            }
+                          />
+                        </div>
+                      </>
+                    ) : null}
+                  </TabsContent>
+                </Tabs>
+              </div>
+            </>
+          )}
         </SheetContent>
       </Sheet>
-      <ZipBrowserSheet
-        entry={zipEntry}
-        onClose={() => setZipEntry(null)}
-      />
+      <ZipBrowserSheet entry={zipEntry} onClose={() => setZipEntry(null)} />
     </>
   );
 }
@@ -1119,8 +1126,13 @@ function ZipBrowserSheet({
             <Loading />
           ) : result.error ? (
             <>
-              <ErrorState error="Chưa đọc được cây ZIP từ nguồn." retry={result.reload} />
-              {entry?.toolsUrl && <External href={entry.toolsUrl}>Mở Browser ZIP nguồn</External>}
+              <ErrorState
+                error="Chưa đọc được cây ZIP từ nguồn."
+                retry={result.reload}
+              />
+              {entry?.toolsUrl && (
+                <External href={entry.toolsUrl}>Mở Browser ZIP nguồn</External>
+              )}
             </>
           ) : result.data ? (
             <ul className="zip-tree-list" aria-label="Nội dung ZIP">
@@ -1151,7 +1163,10 @@ function ZipTreeItem({ item }: { item: ZipEntry }) {
             <strong>{item.name}</strong>
             <small>{item.children?.length || 0} mục</small>
           </span>
-          <ChevronDown size={16} className={open ? 'zip-tree-chevron open' : 'zip-tree-chevron'} />
+          <ChevronDown
+            size={16}
+            className={open ? 'zip-tree-chevron open' : 'zip-tree-chevron'}
+          />
         </button>
         {open && item.children?.length ? (
           <ul className="zip-tree-children">
@@ -1164,7 +1179,9 @@ function ZipTreeItem({ item }: { item: ZipEntry }) {
     );
   }
   return (
-    <li className={`zip-tree-item zip-tree-file ${item.important ? 'important' : ''}`}>
+    <li
+      className={`zip-tree-item zip-tree-file ${item.important ? 'important' : ''}`}
+    >
       <FileText size={17} />
       <span className="zip-tree-name">
         <strong>{item.name}</strong>

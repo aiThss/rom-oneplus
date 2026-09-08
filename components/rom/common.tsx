@@ -244,13 +244,22 @@ export function SearchPicker({
         value={value || null}
         onValueChange={(v) => onChange(v || '')}
       >
-        <ComboboxInput placeholder={label} aria-label={label} showClear />
+        <ComboboxInput
+          placeholder={label}
+          aria-label={label}
+          showClear
+          className="w-full min-w-0"
+        />
         <ComboboxContent>
           <ComboboxEmpty>Không tìm thấy thiết bị.</ComboboxEmpty>
           <ComboboxList>
             {(item: string) => (
-              <ComboboxItem key={item} value={item}>
-                {item}
+              <ComboboxItem
+                key={item}
+                value={item}
+                className="truncate min-w-0"
+              >
+                <span className="truncate">{item}</span>
               </ComboboxItem>
             )}
           </ComboboxList>
@@ -269,4 +278,3 @@ export function timeLabel(time: number) {
   });
 }
 export { Markdown } from './markdown';
-
