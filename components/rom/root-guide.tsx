@@ -14,7 +14,6 @@ import {
   RefreshCw,
   Sparkles,
   Info,
-  Layers,
   HardDrive,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -32,6 +31,15 @@ import {
   type RootPatchJobStatus,
   type RootPatchVariant,
 } from '@/lib/model';
+
+function isSupportedRootVariant(variant: RootPatchVariant) {
+  const variantName = `${variant.id} ${variant.label}`.toLowerCase();
+  return (
+    !variantName.includes('apatch') &&
+    !variantName.includes('magisk') &&
+    /kernelsu|sukisu/.test(variantName)
+  );
+}
 
 export function RootGuideView() {
   const otaResult = useRemote<Cached<Entry[]>>('/api/ota');
@@ -135,16 +143,17 @@ export function RootGuideView() {
     api<RootPatchCapability>(url)
       .then((data) => {
         if (cancelled) return;
-        setCapability(data);
-        if (data.variants?.length) {
-          setSelectedFlavor(data.variants[0].id);
+        const variants = (data.variants || []).filter(isSupportedRootVariant);
+        setCapability({ ...data, variants, available: data.available && variants.length > 0 });
+        if (variants.length) {
+          setSelectedFlavor(variants[0].id);
           const partition = data.partition || 'init_boot';
           const cleanVersion = (activeEntry?.version || 'build').replace(
             /[^a-zA-Z0-9_.-]/g,
             '_',
           );
           setDownloadFilename(
-            `${partition}_patched_${data.variants[0].id}_${cleanVersion}.img`,
+            `${partition}_patched_${variants[0].id}_${cleanVersion}.img`,
           );
         }
       })
@@ -305,7 +314,7 @@ export function RootGuideView() {
       <div className="page-heading">
         <div>
           <div className="eyebrow">ROOT & BOOT PATCH</div>
-          <h1>Root Guide · Vá Boot Image & Sinh lệnh Fastboot</h1>
+          <h1>Root Guide · Vá Boot Image & Lệnh Fastboot</h1>
           <p>
             Vá trực tiếp file <code>init_boot.img</code> (hoặc{' '}
             <code>boot.img</code>) từ OTA nguồn bằng KernelSU / SukiSU / Magisk
@@ -433,24 +442,27 @@ export function RootGuideView() {
               )}
 
               <div className="flavor-select-wrapper">
-                <label className="filter-label">
-                  <span>Giải pháp Root (Root Solution)</span>
-                  <div className="flavor-pills">
-                    {capability.variants.map((v: RootPatchVariant) => (
-                      <button
-                        key={v.id}
-                        type="button"
-                        className={`flavor-pill ${selectedFlavor === v.id ? 'active' : ''}`}
-                        onClick={() => handleFlavorChange(v.id)}
-                        disabled={isPatching}
-                      >
-                        <Sparkles size={14} />
+                <span className="filter-label" id="root-solution-label">
+                  Giải pháp Root (Root Solution)
+                </span>
+                <div className="flavor-pills">
+                  {capability.variants.map((v: RootPatchVariant) => (
+                    <button
+                      key={v.id}
+                      type="button"
+                      className={`flavor-pill ${selectedFlavor === v.id ? 'active' : ''}`}
+                      onClick={() => handleFlavorChange(v.id)}
+                      disabled={isPatching}
+                      aria-pressed={selectedFlavor === v.id}
+                    >
+                      <Sparkles size={14} />
+                      <span className="flavor-pill-copy">
                         <strong>{v.label}</strong>
                         {v.version && <small>{v.version}</small>}
-                      </button>
-                    ))}
-                  </div>
-                </label>
+                      </span>
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div className="patch-action-box">
@@ -622,7 +634,7 @@ export function RootGuideView() {
             </a>
 
             <a
-              href="https://github.com/bmax121/APatch/releases"
+              href="https://github.com/SukiSU-Ultra/SukiSU-Ultra/releases"
               target="_blank"
               rel="noopener noreferrer"
               className="tool-card"
@@ -631,24 +643,8 @@ export function RootGuideView() {
                 <ShieldCheck size={22} />
               </div>
               <div className="tool-info">
-                <strong>APatch Manager APK</strong>
-                <span>Giải pháp vá KernelPath / Supercall</span>
-              </div>
-              <ExternalLink size={16} />
-            </a>
-
-            <a
-              href="https://github.com/topjohnwu/Magisk/releases"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="tool-card"
-            >
-              <div className="tool-icon">
-                <Layers size={22} />
-              </div>
-              <div className="tool-info">
-                <strong>Magisk Manager APK</strong>
-                <span>Ứng dụng Magisk Root truyền thống</span>
+                <strong>SukiSU Ultra Releases</strong>
+                <span>Tải bản phát hành SukiSU Ultra chính thức</span>
               </div>
               <ExternalLink size={16} />
             </a>
@@ -691,9 +687,9 @@ export function RootGuideView() {
             <div className="guide-bullet">
               <span className="bullet-num">3</span>
               <div>
-                <strong>Lưu ý cho OnePlus 15 / Máy nội địa Trung Quốc</strong>
+                <strong>Lưu ý cho OnePlus / Máy nội địa Trung Quốc</strong>
                 <p>
-                  Nếu bạn sở hữu máy OnePlus 15 nội địa chuyển sang OxygenOS,
+                  Nếu bạn sở hữu máy OnePlus nội địa chuyển sang OxygenOS,
                   tuyệt đối không khóa lại bootloader nếu chưa khôi phục quyền
                   truy cập Fastboot tiêu chuẩn.
                 </p>

@@ -2612,6 +2612,8 @@ textarea {
 }
 .flavor-pill {
   display: inline-flex;
+  min-width: 150px;
+  min-height: 52px;
   align-items: center;
   gap: 8px;
   padding: 10px 16px;
@@ -2619,6 +2621,7 @@ textarea {
   border: 1px solid var(--border);
   background: var(--card);
   color: var(--foreground);
+  text-align: left;
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -2626,11 +2629,32 @@ textarea {
   border-color: var(--primary);
   background: var(--secondary);
 }
+.flavor-pill:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--primary) 35%, transparent);
+  outline-offset: 3px;
+}
 .flavor-pill.active {
   border-color: var(--primary);
   background: var(--primary);
   color: #fff;
   box-shadow: 0 4px 12px rgba(0, 122, 255, 0.25);
+}
+.flavor-pill.active:hover:not(:disabled) {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: #fff;
+}
+.flavor-pill-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 1px;
+}
+.flavor-pill-copy strong,
+.flavor-pill-copy small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .flavor-pill.active small {
   opacity: 0.85;
