@@ -90,7 +90,9 @@ export function Shell({
       style={
         {
           '--sidebar-width': '242px',
-          ...(accent ? { '--brand': accent, '--primary': accent } : {}),
+          ...(accent && !(dark && accent.toLowerCase() === '#007aff')
+            ? { '--brand': accent, '--primary': accent }
+            : {}),
         } as React.CSSProperties
       }
       className="rom-app"

@@ -2516,14 +2516,40 @@ textarea {
   flex-wrap: wrap;
   gap: 8px;
   padding: 10px 14px;
-  background: var(--muted);
+  background: var(--secondary);
+  border: 1px solid var(--border);
   border-radius: 10px;
   font-size: 13px;
   color: var(--foreground);
 }
+.current-ota-meta strong {
+  color: var(--foreground);
+}
 .current-ota-meta code {
   font-weight: 600;
-  color: var(--primary);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: #0284c7;
+  background: rgba(2, 132, 199, 0.08);
+  border: 1px solid rgba(2, 132, 199, 0.2);
+  padding: 2px 7px;
+  border-radius: 6px;
+}
+.dark .current-ota-meta {
+  background: #161f2e;
+  border-color: #223249;
+  color: #f1f5f9;
+}
+.dark .current-ota-meta strong {
+  color: #ffffff;
+}
+.dark .current-ota-meta code {
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.16);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.12);
+}
+.dark .ota-meta-checksum {
+  color: #94a3b8;
 }
 .ota-meta-checksum {
   margin-left: auto;
@@ -2539,7 +2565,8 @@ textarea {
   align-items: center;
   gap: 12px;
   padding: 16px;
-  background: var(--muted);
+  background: var(--secondary);
+  border: 1px solid var(--border);
   border-radius: 12px;
   font-size: 13.5px;
   color: var(--muted-foreground);
@@ -2597,7 +2624,7 @@ textarea {
 }
 .flavor-pill:hover:not(:disabled) {
   border-color: var(--primary);
-  background: var(--muted);
+  background: var(--secondary);
 }
 .flavor-pill.active {
   border-color: var(--primary);
@@ -2638,7 +2665,7 @@ textarea {
   border-radius: 12px;
   font-size: 13px;
   border: 1px solid var(--border);
-  background: var(--muted);
+  background: var(--secondary);
 }
 .patch-status-box.queued {
   border-color: rgba(234, 179, 8, 0.4);
@@ -2766,7 +2793,7 @@ textarea {
 }
 .tool-card:hover {
   border-color: var(--primary);
-  background: var(--muted);
+  background: var(--secondary);
   transform: translateY(-1px);
 }
 .tool-icon {
@@ -2812,7 +2839,8 @@ textarea {
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  background: var(--muted);
+  background: var(--secondary);
+  border: 1px solid var(--border);
   color: var(--foreground);
   font-size: 12px;
   font-weight: 700;
@@ -2830,4 +2858,19 @@ textarea {
   font-size: 12.5px;
   color: var(--muted-foreground);
   line-height: 1.5;
+}
+
+.dark .patch-target-banner {
+  background: rgba(56, 189, 248, 0.08);
+  border-color: rgba(56, 189, 248, 0.22);
+}
+.dark .flavor-pill.active {
+  background: #0284c7;
+  border-color: #38bdf8;
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(56, 189, 248, 0.25);
+}
+.dark .tool-icon {
+  background: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
 }
