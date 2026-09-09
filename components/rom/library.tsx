@@ -67,6 +67,7 @@ import {
 } from '@/lib/model';
 import type { Traffic } from '@/lib/parsers';
 import { deviceSpecFor } from '@/lib/device-specs';
+import { regionLabel, useLanguage } from '@/lib/language';
 
 const CHINA_DEVICE_NOTE = 'Mọi thiết bị đến từ China chỉ sử dụng SuperFLasher';
 
@@ -103,17 +104,30 @@ function isArb(text?: string | null): boolean {
   if (!text) return false;
   return /\barb\b|anti-rollback/i.test(text);
 }
+
+function localizedEntryDescription(description: string | undefined, en: boolean) {
+  if (!description || !en) return description;
+  return description
+    .replace(/^Mã máy\s+(.+?)\s*·\s*mở danh sách ROM HyperOS$/i, 'Device code $1 · open HyperOS ROM list')
+    .replace(/^Mã máy:\s*/i, 'Device code: ')
+    .replace(/mở danh sách ROM HyperOS/gi, 'open HyperOS ROM list');
+}
 export function Library() {
   const [loc, setLoc] = useState({ view: 'archive', path: '', brand: '' });
-  const { data: settings, error: configError } =
+  const { language } = useLanguage();
+  const en = language === 'en';
+  const { data: settings, error: configError, loading: configLoading } =
     useRemote<Settings>('/api/settings');
   const config = settings || defaultSettings;
   useEffect(() => {
     setLoc(locationState());
   }, []);
   useEffect(() => {
-    document.title = config.name + ' — ROM, firmware & recovery';
-  }, [config.name]);
+    document.title = en
+      ? config.name + ' — ROM, firmware & recovery'
+      : config.name + ' — ROM, firmware & recovery';
+  }, [config.name, en]);
+  if (configLoading && !settings && !configError) return <Loading />;
   const activeView = loc.view === 'xiaomi' ? 'archive' : loc.view;
   const visible =
     config.sections.find((s) => s.id === activeView)?.enabled !== false;
@@ -128,8 +142,8 @@ export function Library() {
         {configError && <ErrorState error={configError} />}{' '}
         {!visible ? (
           <EmptyState
-            title="Danh mục đang ẩn"
-            description="Quản trị viên đã tắt mục này."
+            title={en ? 'Category hidden' : 'Danh mục đang ẩn'}
+            description={en ? 'The administrator has disabled this category.' : 'Quản trị viên đã tắt mục này.'}
           />
         ) : activeView === 'ota' ? (
           <OtaView />
@@ -182,17 +196,19 @@ function Heading({
   );
 }
 function Freshness({ value }: { value: Cached<unknown> }) {
+  const { language } = useLanguage();
+  const en = language === 'en';
   return (
     <div className={`freshness ${value.stale ? 'stale' : ''}`}>
       <span>
         <Clock size={13} />
-        {value.stale ? 'Dữ liệu đã lưu' : 'Đồng bộ'} ·{' '}
+        {value.stale ? (en ? 'Cached data' : 'Dữ liệu đã lưu') : (en ? 'Synced' : 'Đồng bộ')} ·{' '}
         {timeLabel(value.updatedAt)}
       </span>
       <a href={value.sourceUrl} target="_blank" rel="noreferrer">
-        Mở nguồn <ArrowUpRight size={13} />
+        {en ? 'Open source' : 'Mở nguồn'} <ArrowUpRight size={13} />
       </a>
-      {value.error && <p>{value.error} Đang hiển thị bản gần nhất.</p>}
+      {value.error && <p>{value.error} {en ? 'Showing the latest available copy.' : 'Đang hiển thị bản gần nhất.'}</p>}
     </div>
   );
 }
@@ -203,6 +219,8 @@ function DevicePreviewCompact({
   device: string;
   preview?: DevicePreview;
 }) {
+  const { language } = useLanguage();
+  const en = language === 'en';
   const spec = deviceSpecFor(device);
   const value =
     preview ||
@@ -220,7 +238,7 @@ function DevicePreviewCompact({
       href={value.sourceUrl}
       target="_blank"
       rel="noreferrer"
-      aria-label={`Xem cấu hình ${value.name} trên ${
+      aria-label={`${en ? 'View specs for' : 'Xem cấu hình'} ${value.name} ${en ? 'on' : 'trên'} ${
         spec ? 'GSMArena' : 'HyperOS.fans'
       }`}
     >
@@ -228,7 +246,7 @@ function DevicePreviewCompact({
         <img src={value.imageUrl} alt={value.imageAlt} />
       </div>
       <div className="device-preview-compact-copy">
-        <span className="device-preview-compact-label">CẤU HÌNH TÓM TẮT</span>
+        <span className="device-preview-compact-label">{en ? 'QUICK SPECS' : 'CẤU HÌNH TÓM TẮT'}</span>
         <strong>{value.name}</strong>
         <span className="device-preview-compact-specs">
           {value.summary.slice(0, 2).join(' · ')}
@@ -243,38 +261,46 @@ const BRAND_CHOICES = [
     id: 'oneplus',
     name: 'OnePlus',
     description: 'ROM tùy biến, firmware, recovery và công cụ cứu máy.',
+    descriptionEn: 'Custom ROMs, firmware, recovery, and rescue tools.',
     source: 'Kho ROM Việt',
   },
   {
     id: 'xiaomi',
     name: 'Xiaomi',
     description: 'Thiết bị Xiaomi và các nhánh HyperOS theo khu vực.',
+    descriptionEn: 'Xiaomi devices and regional HyperOS branches.',
     source: 'HyperOS.fans',
   },
   {
     id: 'redmi',
     name: 'Redmi',
     description: 'Danh sách Redmi, phiên bản hệ điều hành và gói ROM.',
+    descriptionEn: 'Redmi devices, OS versions, and ROM packages.',
     source: 'HyperOS.fans',
   },
   {
     id: 'poco',
     name: 'POCO',
     description: 'Danh sách POCO và các gói Recovery/Fastboot tương ứng.',
+    descriptionEn: 'POCO devices and matching Recovery/Fastboot packages.',
     source: 'HyperOS.fans',
   },
 ] as const;
 
 function BrandChooser() {
+  const { language } = useLanguage();
+  const en = language === 'en';
   return (
     <section
       className="brand-chooser panel"
       aria-labelledby="brand-chooser-title"
     >
       <div className="brand-chooser-heading">
-        <span className="eyebrow">THƯ VIỆN THIẾT BỊ</span>
-        <h2 id="brand-chooser-title">Bạn đang sử dụng hãng điện thoại gì?</h2>
-        <p>Chọn hãng để mở nhóm thiết bị được hỗ trợ.</p>
+        <span className="eyebrow">{en ? 'DEVICE LIBRARY' : 'THƯ VIỆN THIẾT BỊ'}</span>
+        <h2 id="brand-chooser-title">
+          {en ? 'Which phone brand are you using?' : 'Bạn đang sử dụng hãng điện thoại gì?'}
+        </h2>
+        <p>{en ? 'Choose a brand to browse supported devices.' : 'Chọn hãng để mở nhóm thiết bị được hỗ trợ.'}</p>
       </div>
       <div className="brand-choice-grid">
         {BRAND_CHOICES.map((brand, i) => (
@@ -289,7 +315,7 @@ function BrandChooser() {
             <div className="brand-choice-info">
               <span className="meta">{brand.source}</span>
               <h3>{brand.name}</h3>
-              <p>{brand.description}</p>
+              <p>{en ? brand.descriptionEn : brand.description}</p>
             </div>
             <ArrowUpRight size={17} className="brand-choice-arrow" />
           </a>
@@ -308,6 +334,8 @@ function ArchiveView({
   path: string;
   brand?: string;
 }) {
+  const { language } = useLanguage();
+  const en = language === 'en';
   const brandChoice = BRAND_CHOICES.find((item) => item.id === brand);
   const source =
     view === 'mirrors'
@@ -366,9 +394,9 @@ function ArchiveView({
         context.registerTool(
           {
             name: 'filter_rom_catalog',
-            title: 'Lọc danh mục ROM đang xem',
+            title: en ? 'Filter the current ROM catalog' : 'Lọc danh mục ROM đang xem',
             description:
-              'Đổi ô tìm kiếm và trả về các mục phù hợp trong danh mục đang mở. Không tải file.',
+              en ? 'Update the search field and return matching entries in the open catalog. Does not download files.' : 'Đổi ô tìm kiếm và trả về các mục phù hợp trong danh mục đang mở. Không tải file.',
             inputSchema: {
               type: 'object',
               properties: { query: { type: 'string', maxLength: 200 } },
@@ -379,7 +407,7 @@ function ArchiveView({
             execute: async (input: unknown) => {
               const q = (input as { query?: unknown })?.query;
               if (typeof q !== 'string' || q.length > 200)
-                throw new Error('Từ khóa không hợp lệ.');
+                throw new Error(en ? 'Invalid search keyword.' : 'Từ khóa không hợp lệ.');
               setQuery(q);
               await new Promise(requestAnimationFrame);
               return {
@@ -401,25 +429,25 @@ function ArchiveView({
       ).catch(() => {});
     } catch {}
     return () => ctrl.abort();
-  }, [data, path, kind]);
+  }, [data, path, kind, en]);
   const chooser = view === 'archive' && !path && !brandChoice;
   const title = path
-    ? data?.title || displayName(path.split('/').at(-1)!)
+        ? data?.title || displayName(path.split('/').at(-1)!)
     : view === 'mirrors'
-      ? 'Kho lưu trữ SourceForge'
+      ? en ? 'SourceForge Archive' : 'Kho lưu trữ SourceForge'
       : brandChoice
-        ? `Thiết bị ${brandChoice.name}`
-        : 'Chọn thiết bị của bạn';
+        ? en ? `${brandChoice.name} devices` : `Thiết bị ${brandChoice.name}`
+        : en ? 'Choose your device' : 'Chọn thiết bị của bạn';
   const description = path
     ? (source === 'xiaomi'
         ? data?.preview?.name || displayName(path.split('/')[0])
         : displayName(path.split('/')[0])) +
-      ' · Chọn thư mục hoặc bản phần mềm cần tải.'
+      (en ? ' · Choose a folder or software package to download.' : ' · Chọn thư mục hoặc bản phần mềm cần tải.')
     : view === 'mirrors'
-      ? 'Các bản lưu trữ và gói tải bổ sung từ SourceForge.'
+      ? en ? 'Archives and additional download packages from SourceForge.' : 'Các bản lưu trữ và gói tải bổ sung từ SourceForge.'
       : brandChoice
-        ? `${brandChoice.name} · Chọn thiết bị được hỗ trợ để xem các gói tải.`
-        : 'Chọn hãng điện thoại để mở nhóm thiết bị hỗ trợ.';
+        ? en ? `${brandChoice.name} · Choose a supported device to view download packages.` : `${brandChoice.name} · Chọn thiết bị được hỗ trợ để xem các gói tải.`
+        : en ? 'Choose a phone brand to browse supported devices.' : 'Chọn hãng điện thoại để mở nhóm thiết bị hỗ trợ.';
   return (
     <>
       <Heading
@@ -428,7 +456,7 @@ function ArchiveView({
             ? 'SourceForge Mirrors'
             : brandChoice
               ? brandChoice.name.toUpperCase()
-              : 'Thư viện phần mềm'
+              : en ? 'Software Library' : 'Thư viện phần mềm'
         }
         title={title}
         description={description}
@@ -453,17 +481,17 @@ function ArchiveView({
         }
       />
       {brandChoice && !path && view === 'archive' && (
-        <nav className="breadcrumbs brand-back" aria-label="Quay lại chọn hãng">
+        <nav className="breadcrumbs brand-back" aria-label={en ? 'Back to brand selection' : 'Quay lại chọn hãng'}>
           <a href={browse('archive')}>
             <ArrowLeft size={14} aria-hidden="true" />
-            Chọn hãng điện thoại
+            {en ? 'Choose phone brand' : 'Chọn hãng điện thoại'}
           </a>
         </nav>
       )}
       {path && (
-        <nav className="breadcrumbs" aria-label="Đường dẫn">
+        <nav className="breadcrumbs" aria-label={en ? 'Breadcrumbs' : 'Đường dẫn'}>
           <a href={browse(view, '', brand)}>
-            {view === 'mirrors' ? 'SourceForge' : 'Chọn hãng điện thoại'}
+            {view === 'mirrors' ? 'SourceForge' : (en ? 'Choose phone brand' : 'Chọn hãng điện thoại')}
           </a>
           {path.split('/').map((part, i) => (
             <span key={i}>
@@ -496,7 +524,7 @@ function ArchiveView({
             ) : (
               <ShieldCheck size={17} />
             )}
-            <span>Lưu ý kỹ thuật quan trọng phải đọc</span>
+            <span>{en ? 'Important technical notes' : 'Lưu ý kỹ thuật quan trọng phải đọc'}</span>
             <ChevronDown
               size={17}
               className="technical-note-chevron"
@@ -514,7 +542,7 @@ function ArchiveView({
                 {isArb(n) ? (
                   <span className="arb-tag">
                     <TriangleAlert size={12} />
-                    <strong>{n} (Cảnh báo chống hạ cấp ARB)</strong>
+                    <strong>{n} ({en ? 'Anti-Rollback warning' : 'Cảnh báo chống hạ cấp ARB'})</strong>
                   </span>
                 ) : (
                   n
@@ -535,29 +563,29 @@ function ArchiveView({
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={
-                  path ? 'Tìm tên trong thư mục này…' : 'Tìm thiết bị…'
+                  path ? (en ? 'Search this folder…' : 'Tìm tên trong thư mục này…') : (en ? 'Search devices…' : 'Tìm thiết bị…')
                 }
-                aria-label="Tìm trong danh mục"
+                aria-label={en ? 'Search catalog' : 'Tìm trong danh mục'}
               />
             </div>
             <SelectField
-              label="Hiển thị"
+              label={en ? 'Show' : 'Hiển thị'}
               value={kind}
               onChange={setKind}
               options={[
-                { value: 'all', label: 'Tất cả' },
-                { value: 'folder', label: 'Thư mục' },
-                { value: 'file', label: 'Gói phần mềm' },
-                { value: 'link', label: 'Tài liệu' },
+                { value: 'all', label: en ? 'All' : 'Tất cả' },
+                { value: 'folder', label: en ? 'Folders' : 'Thư mục' },
+                { value: 'file', label: en ? 'Packages' : 'Gói phần mềm' },
+                { value: 'link', label: en ? 'Documents' : 'Tài liệu' },
               ]}
             />
             <SelectField
-              label="Sắp xếp"
+              label={en ? 'Sort' : 'Sắp xếp'}
               value={sort}
               onChange={setSort}
               options={[
-                { value: 'source', label: 'Theo nguồn' },
-                { value: 'name', label: 'Tên A–Z' },
+                { value: 'source', label: en ? 'By source' : 'Theo nguồn' },
+                { value: 'name', label: en ? 'Name A–Z' : 'Tên A–Z' },
               ]}
             />
           </div>
@@ -575,7 +603,7 @@ function ArchiveView({
                       : 'https://sourceforge.net/projects/oneplus13flashers/files/'
                 }
               >
-                Mở kho nguồn
+                  {en ? 'Open source archive' : 'Mở kho nguồn'}
               </External>
             </>
           ) : (
@@ -583,8 +611,8 @@ function ArchiveView({
               {folders.length > 0 && (
                 <>
                   <div className="section-title">
-                    <h2>{path ? 'Thư mục' : 'Thiết bị & công cụ'}</h2>
-                    <span>{folders.length} mục</span>
+                    <h2>{path ? (en ? 'Folder' : 'Thư mục') : (en ? 'Devices & tools' : 'Thiết bị & công cụ')}</h2>
+                    <span>{folders.length} {en ? 'items' : 'mục'}</span>
                   </div>
                   <div className="device-grid">
                     {folders.map((entry, i) => {
@@ -613,19 +641,19 @@ function ArchiveView({
                           <div className="device-info">
                             <span className="meta">
                               {path
-                                ? 'Thư mục'
+                                ? en ? 'Folder' : 'Thư mục'
                                 : /pad/i.test(entry.name)
-                                  ? 'Máy tính bảng'
+                                  ? en ? 'Tablet' : 'Máy tính bảng'
                                   : xiaomiDevice
-                                    ? 'Điện thoại / máy tính bảng'
+                                    ? en ? 'Phone / tablet' : 'Điện thoại / máy tính bảng'
                                     : /oneplus|oppo|realme|xiaomi|redmi|poco/i.test(
                                           entry.name,
                                         )
-                                      ? 'Điện thoại'
-                                      : 'Công cụ'}
+                                      ? en ? 'Phone' : 'Điện thoại'
+                                      : en ? 'Tool' : 'Công cụ'}
                             </span>
                             <h3>{displayName(entry.name)}</h3>
-                            <p>{entry.description || 'Xem thư mục'}</p>
+                            <p>{localizedEntryDescription(entry.description, en) || (en ? 'Browse folder' : 'Xem thư mục')}</p>
                           </div>
                           <div className="device-arrow">
                             <ArrowUpRight size={17} />
@@ -639,8 +667,8 @@ function ArchiveView({
               {files.length > 0 && (
                 <>
                   <div className="section-title">
-                    <h2>Bản phần mềm & tài liệu</h2>
-                    <span>{files.length} mục</span>
+                    <h2>{en ? 'Software & documents' : 'Bản phần mềm & tài liệu'}</h2>
+                    <span>{files.length} {en ? 'items' : 'mục'}</span>
                   </div>
                   <div className="file-list">
                     {files.map((e) => (
@@ -658,21 +686,21 @@ function ArchiveView({
                 <EmptyState
                   title={
                     query
-                      ? 'Không tìm thấy kết quả'
-                      : 'Phần mềm chưa được thêm vào'
+                      ? en ? 'No results found' : 'Không tìm thấy kết quả'
+                      : en ? 'No software has been added' : 'Phần mềm chưa được thêm vào'
                   }
                   description={
                     query
-                      ? 'Thử tên thiết bị, phiên bản hoặc từ khóa ngắn hơn.'
-                      : 'Chưa có kết quả phù hợp với các bộ lọc hiện tại.'
+                      ? en ? 'Try a device name, version, or shorter keyword.' : 'Thử tên thiết bị, phiên bản hoặc từ khóa ngắn hơn.'
+                      : en ? 'No results match the current filters.' : 'Chưa có kết quả phù hợp với các bộ lọc hiện tại.'
                   }
                 />
               )}
               {!path && !query && data?.latest.length ? (
                 <>
                   <div className="section-title">
-                    <h2>Những cập nhật mới...</h2>
-                    <span>Cập nhật gần đây</span>
+                    <h2>{en ? 'Latest updates...' : 'Những cập nhật mới...'}</h2>
+                    <span>{en ? 'Recently updated' : 'Cập nhật gần đây'}</span>
                   </div>
                   <div className="file-list">
                     {data.latest.map((e) => (
@@ -708,6 +736,8 @@ export function FileRow({
   onBrowseZip?: (entry: Entry) => void;
   compact?: boolean;
 }) {
+  const { language } = useLanguage();
+  const en = language === 'en';
   return (
     <article className="panel file-row">
       <div className="file-icon">
@@ -719,8 +749,8 @@ export function FileRow({
       </div>
       <button className="file-title grow" onClick={() => onSelect(entry)}>
         <span className="meta">
-          {displayName(entry.device || entry.parent || 'Thiết bị')}
-          {entry.region ? ' · ' + entry.region : ''}
+          {displayName(entry.device || entry.parent || (en ? 'Device' : 'Thiết bị'))}
+          {entry.region ? ' · ' + regionLabel(entry.region, language) : ''}
           {entry.notes?.filter(isArb).map((note, i) => (
             <span key={i} className="arb-tag">
               <TriangleAlert size={11} />
@@ -733,8 +763,8 @@ export function FileRow({
           <p>
             {entry.size
               ? formatBytes(entry.size)
-              : entry.sizeLabel || 'Dung lượng chưa có'}
-            {entry.isLatest ? ' · Mới nhất' : ''}
+              : entry.sizeLabel || (en ? 'Size unavailable' : 'Dung lượng chưa có')}
+            {entry.isLatest ? ` · ${en ? 'Latest' : 'Mới nhất'}` : ''}
           </p>
         )}
       </button>
@@ -760,7 +790,7 @@ export function FileRow({
           className="action"
           onClick={() => onSelect(entry)}
         >
-          Chi tiết
+          {en ? 'Details' : 'Chi tiết'}
           <ChevronRight size={14} />
         </Button>
       </div>
@@ -775,6 +805,8 @@ type Change = {
   error?: string;
 };
 function TelegramMirrorButton({ url }: { url: string }) {
+  const { language } = useLanguage();
+  const en = language === 'en';
   const [copied, setCopied] = useState(false);
 
   const handleMirror = async () => {
@@ -796,10 +828,10 @@ function TelegramMirrorButton({ url }: { url: string }) {
       variant="outline"
       className="action secondary-action"
       onClick={handleMirror}
-      title="Sao chép cú pháp /m và mở nhóm Telegram để tạo mirror Google Drive"
+      title={en ? 'Copy the /m command and open Telegram to create a Google Drive mirror' : 'Sao chép cú pháp /m và mở nhóm Telegram để tạo mirror Google Drive'}
     >
       {copied ? <Check size={15} /> : <Send size={15} />}
-      {copied ? 'Đã chép lệnh mirror' : 'Mirror Google Drive'}
+      {copied ? (en ? 'Mirror command copied' : 'Đã chép lệnh mirror') : 'Mirror Google Drive'}
     </Button>
   );
 }
@@ -811,6 +843,8 @@ export function EntrySheet({
   entry: Entry | null;
   onClose: () => void;
 }) {
+  const { language } = useLanguage();
+  const en = language === 'en';
   const [tab, setTab] = useState('info');
   useEffect(() => setTab('info'), [entry?.id]);
   const detail = useRemote<Entry>(
@@ -852,7 +886,7 @@ export function EntrySheet({
                 <SheetTitle className="sheet-title">{value.name}</SheetTitle>
                 <SheetDescription>
                   {displayName(value.device || 'Phần mềm')}{' '}
-                  {value.region && '· ' + value.region}
+                  {value.region && '· ' + regionLabel(value.region, language)}
                   {value.notes?.filter(isArb).map((note, i) => (
                     <span key={i} className="arb-tag arb-tag-large">
                       <TriangleAlert size={12} />
@@ -864,21 +898,21 @@ export function EntrySheet({
               <div className="sheet-body">
                 <Tabs value={tab} onValueChange={(v) => setTab(String(v))}>
                   <TabsList className="wide-tabs">
-                    <TabsTrigger value="info">Thông tin & tải</TabsTrigger>
+                    <TabsTrigger value="info">{en ? 'Info & downloads' : 'Thông tin & tải'}</TabsTrigger>
                     <TabsTrigger value="changelog">Changelog</TabsTrigger>
                   </TabsList>
                   <TabsContent value="info">
                     <div className="detail-grid">
                       <div>
-                        <span>Dung lượng</span>
+                        <span>{en ? 'Size' : 'Dung lượng'}</span>
                         <strong>
                           {value.size
                             ? formatBytes(value.size)
-                            : value.sizeLabel || 'Chưa có dữ liệu'}
+                            : value.sizeLabel || (en ? 'No data' : 'Chưa có dữ liệu')}
                         </strong>
                       </div>
                       <div>
-                        <span>Nguồn</span>
+                        <span>{en ? 'Source' : 'Nguồn'}</span>
                         <strong>
                           {value.source === 'ota'
                             ? 'Danh mục OTA'
@@ -887,13 +921,13 @@ export function EntrySheet({
                               : value.source === 'xiaomi'
                                 ? 'HyperOS.fans'
                                 : value.source === 'custom'
-                                  ? 'Liên kết bổ sung'
+                                  ? (en ? 'Additional link' : 'Liên kết bổ sung')
                                   : 'ROM Archive'}
                         </strong>
                       </div>
                       {value.published && (
                         <div>
-                          <span>Ngày phát hành</span>
+                          <span>{en ? 'Release date' : 'Ngày phát hành'}</span>
                           <strong>
                             {new Date(value.published).toLocaleDateString(
                               'vi-VN',
@@ -913,7 +947,7 @@ export function EntrySheet({
                         {value.checksumType || 'Checksum'}
                       </span>
                       {detail.loading ? (
-                        <p>Đang kiểm tra checksum…</p>
+                        <p>{en ? 'Checking checksum…' : 'Đang kiểm tra checksum…'}</p>
                       ) : value.checksum ? (
                         <>
                           <code>{value.checksum}</code>
@@ -923,7 +957,7 @@ export function EntrySheet({
                           />
                         </>
                       ) : (
-                        <p>Nguồn chưa cung cấp checksum đã xác minh.</p>
+                        <p>{en ? 'The source has not provided a verified checksum.' : 'Nguồn chưa cung cấp checksum đã xác minh.'}</p>
                       )}
                     </div>
                     {detail.error && (
@@ -947,18 +981,18 @@ export function EntrySheet({
                                 <p className={arb ? 'arb-text' : ''}>
                                   {arb ? (
                                     <strong>
-                                      {n} (Cảnh báo chống hạ cấp Anti-Rollback)
+                                      {n} ({en ? 'Anti-Rollback warning' : 'Cảnh báo chống hạ cấp Anti-Rollback'})
                                     </strong>
                                   ) : (
                                     n
                                   )}
                                 </p>
                                 {arb && (
-                                  <p className="arb-warning-sub">
-                                    Hạ cấp xuống bản có chỉ số ARB thấp hơn có
-                                    thể làm máy mất nguồn / hard brick hoàn
-                                    toàn!
-                                  </p>
+                                    <p className="arb-warning-sub">
+                                      {en
+                                        ? 'Downgrading to a build with a lower ARB index can permanently hard-brick the device.'
+                                        : 'Hạ cấp xuống bản có chỉ số ARB thấp hơn có thể làm máy mất nguồn / hard brick hoàn toàn!'}
+                                    </p>
                                 )}
                               </div>
                             </div>
@@ -969,19 +1003,19 @@ export function EntrySheet({
                     <div className="download-box">
                       <h3>
                         {value.source === 'ota'
-                          ? 'Tải qua công cụ OTA'
-                          : 'Liên kết tải'}
+                          ? (en ? 'Download via OTA tool' : 'Tải qua công cụ OTA')
+                          : (en ? 'Download links' : 'Liên kết tải')}
                       </h3>
                       <p>
                         {value.source === 'ota'
-                          ? 'Mở công cụ nguồn, chọn đúng thiết bị, khu vực và phiên bản bên dưới.'
-                          : 'File được cung cấp bởi máy chủ nguồn.'}
+                          ? (en ? 'Open the source tool and choose the correct device, region, and version below.' : 'Mở công cụ nguồn, chọn đúng thiết bị, khu vực và phiên bản bên dưới.')
+                          : (en ? 'The file is provided by the source server.' : 'File được cung cấp bởi máy chủ nguồn.')}
                       </p>
                       <div className="action-row">
                         {value.downloadUrl ? (
                           <>
                             <External href={value.downloadUrl} primary>
-                              Tải xuống
+                              {en ? 'Download' : 'Tải xuống'}
                             </External>
                             <CopyButton
                               value={value.downloadUrl}
@@ -991,8 +1025,8 @@ export function EntrySheet({
                         ) : (
                           <External href={value.sourceUrl} primary>
                             {value.source === 'ota'
-                              ? 'Mở công cụ OTA'
-                              : 'Mở trang phát hành'}
+                              ? (en ? 'Open OTA tool' : 'Mở công cụ OTA')
+                              : (en ? 'Open release page' : 'Mở trang phát hành')}
                           </External>
                         )}
                         {(value.downloadUrl || value.sourceUrl) && (
@@ -1029,11 +1063,11 @@ export function EntrySheet({
                             <Folder size={15} />
                             Browse ZIP
                           </Button>
-                          <External href={value.toolsUrl}>Mở nguồn</External>
+                          <External href={value.toolsUrl}>{en ? 'Open source' : 'Mở nguồn'}</External>
                         </div>
                       )}
                     <div className="source-bottom">
-                      <External href={value.sourceUrl}>Trang nguồn</External>
+                      <External href={value.sourceUrl}>{en ? 'Source page' : 'Trang nguồn'}</External>
                     </div>
                   </TabsContent>
                   <TabsContent value="changelog">
@@ -1050,12 +1084,12 @@ export function EntrySheet({
                               className="action"
                               onClick={() => setOriginal(!original)}
                             >
-                              {original ? 'Xem tiếng Việt' : 'Xem bản gốc'}
+                              {original ? (en ? 'View Vietnamese' : 'Xem tiếng Việt') : (en ? 'View original' : 'Xem bản gốc')}
                             </Button>
                           )}
                           {changes.data.sourceUrl && (
                             <External href={changes.data.sourceUrl}>
-                              Mở changelog gốc
+                              {en ? 'Open original changelog' : 'Mở changelog gốc'}
                             </External>
                           )}
                         </div>
@@ -1067,7 +1101,9 @@ export function EntrySheet({
                             content={
                               (!original && changes.data.vi) ||
                               changes.data.original ||
-                              'Bản phát hành này chưa có nội dung changelog. Khi nguồn có liên kết, bạn có thể mở bản gốc ở trên.'
+                              (en
+                                ? 'This release has no changelog content. Open the original above when the source provides a link.'
+                                : 'Bản phát hành này chưa có nội dung changelog. Khi nguồn có liên kết, bạn có thể mở bản gốc ở trên.')
                             }
                           />
                         </div>
@@ -1092,6 +1128,8 @@ function ZipBrowserSheet({
   entry: Entry | null;
   onClose: () => void;
 }) {
+  const { language } = useLanguage();
+  const en = language === 'en';
   const result = useRemote<ZipBrowser>(
     entry ? '/api/zip?id=' + encodeURIComponent(entry.id) : null,
   );
@@ -1107,7 +1145,7 @@ function ZipBrowserSheet({
           render={
             <Button variant="ghost" size="icon" className="sheet-close" />
           }
-          aria-label="Đóng Browse ZIP"
+          aria-label={en ? 'Close ZIP browser' : 'Đóng Browse ZIP'}
         >
           <X size={20} />
         </SheetClose>
@@ -1120,8 +1158,8 @@ function ZipBrowserSheet({
           </SheetTitle>
           <SheetDescription>
             {result.data
-              ? `${result.data.summary.files} file · ${result.data.summary.folders} thư mục · ${result.data.summary.entries} mục`
-              : 'Duyệt nội dung ZIP và tải riêng từng file.'}
+              ? `${result.data.summary.files} ${en ? 'files' : 'file'} · ${result.data.summary.folders} ${en ? 'folders' : 'thư mục'} · ${result.data.summary.entries} ${en ? 'items' : 'mục'}`
+              : (en ? 'Browse the ZIP contents and download individual files.' : 'Duyệt nội dung ZIP và tải riêng từng file.')}
           </SheetDescription>
         </SheetHeader>
         <div className="zip-browser-body">
@@ -1130,15 +1168,15 @@ function ZipBrowserSheet({
           ) : result.error ? (
             <>
               <ErrorState
-                error="Chưa đọc được cây ZIP từ nguồn."
+                error={en ? 'Could not read the ZIP tree from the source.' : 'Chưa đọc được cây ZIP từ nguồn.'}
                 retry={result.reload}
               />
               {entry?.toolsUrl && (
-                <External href={entry.toolsUrl}>Mở Browser ZIP nguồn</External>
+                <External href={entry.toolsUrl}>{en ? 'Open source ZIP browser' : 'Mở Browser ZIP nguồn'}</External>
               )}
             </>
           ) : result.data ? (
-            <ul className="zip-tree-list" aria-label="Nội dung ZIP">
+            <ul className="zip-tree-list" aria-label={en ? 'ZIP contents' : 'Nội dung ZIP'}>
               {result.data.entries.map((item) => (
                 <ZipTreeItem key={item.path} item={item} />
               ))}
@@ -1151,6 +1189,8 @@ function ZipBrowserSheet({
 }
 
 function ZipTreeItem({ item }: { item: ZipEntry }) {
+  const { language } = useLanguage();
+  const en = language === 'en';
   const [open, setOpen] = useState(false);
   if (item.kind === 'folder') {
     return (
@@ -1164,7 +1204,7 @@ function ZipTreeItem({ item }: { item: ZipEntry }) {
           <Folder size={17} />
           <span className="zip-tree-name">
             <strong>{item.name}</strong>
-            <small>{item.children?.length || 0} mục</small>
+            <small>{item.children?.length || 0} {en ? 'items' : 'mục'}</small>
           </span>
           <ChevronDown
             size={16}
@@ -1200,15 +1240,17 @@ function ZipTreeItem({ item }: { item: ZipEntry }) {
           target="_blank"
           rel="noreferrer"
         >
-          Tải file
+          {en ? 'Download file' : 'Tải file'}
         </a>
       ) : (
-        <span className="zip-missing-link">Không có link</span>
+        <span className="zip-missing-link">{en ? 'No link available' : 'Không có link'}</span>
       )}
     </li>
   );
 }
 function OtaView() {
+  const { language } = useLanguage();
+  const en = language === 'en';
   const result = useRemote<Cached<Entry[]>>('/api/ota');
   const [device, setDevice] = useState('');
   const [region, setRegion] = useState('all');
@@ -1240,9 +1282,9 @@ function OtaView() {
   return (
     <>
       <Heading
-        eyebrow="FIRMWARE CHÍNH THỨC"
-        title="Tìm bản OTA phù hợp"
-        description="Chọn thiết bị và khu vực. Xem thông tin trước khi tải."
+        eyebrow={en ? 'OFFICIAL FIRMWARE' : 'FIRMWARE CHÍNH THỨC'}
+        title={en ? 'Find the right OTA build' : 'Tìm bản OTA phù hợp'}
+        description={en ? 'Choose a device and region. Review details before downloading.' : 'Chọn thiết bị và khu vực. Xem thông tin trước khi tải.'}
         extra={
           <span className="subtle-pill">
             <LayersIcon />
@@ -1252,7 +1294,7 @@ function OtaView() {
       />
       <div className="panel ota-filters">
         <SearchPicker
-          label="Thiết bị"
+          label={en ? 'Device' : 'Thiết bị'}
           value={device}
           onChange={(v) => {
             setDevice(v);
@@ -1261,18 +1303,18 @@ function OtaView() {
           options={devices}
         />
         <SelectField
-          label="Khu vực"
+          label={en ? 'Region' : 'Khu vực'}
           value={region}
           onChange={setRegion}
           options={[
-            { value: 'all', label: 'Tất cả khu vực' },
-            ...regions.filter(Boolean).map((r) => ({ value: r, label: r })),
+            { value: 'all', label: en ? 'All regions' : 'Tất cả khu vực' },
+            ...regions.filter(Boolean).map((r) => ({ value: r, label: regionLabel(r, language) })),
           ]}
         />
         <label className="filter-label" htmlFor="ota-version">
-          <span>Phiên bản</span>
+          <span>{en ? 'Version' : 'Phiên bản'}</span>
           <Input
-            aria-label="Tìm phiên bản"
+            aria-label={en ? 'Search version' : 'Tìm phiên bản'}
             id="ota-version"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -1287,8 +1329,8 @@ function OtaView() {
       ) : (
         <>
           <div className="section-title">
-            <h2>{device ? displayName(device) : 'Các bản firmware'}</h2>
-            <span>{filtered.length} bản</span>
+            <h2>{device ? displayName(device) : (en ? 'Firmware builds' : 'Các bản firmware')}</h2>
+            <span>{filtered.length} {en ? 'builds' : 'bản'}</span>
           </div>
           <PaginatedEntries entries={filtered} onSelect={setSelected} />
           {result.data && <Freshness value={result.data} />}
@@ -1308,6 +1350,8 @@ function PaginatedEntries({
   entries: Entry[];
   onSelect: (e: Entry) => void;
 }) {
+  const { language } = useLanguage();
+  const en = language === 'en';
   const [limit, setLimit] = useState(30);
   useEffect(() => setLimit(30), [entries.length]);
   return (
@@ -1319,7 +1363,7 @@ function PaginatedEntries({
           ))}
         </div>
       ) : (
-        <EmptyState title="Không có phiên bản phù hợp" />
+        <EmptyState title={en ? 'No matching versions' : 'Không có phiên bản phù hợp'} />
       )}
       {limit < entries.length && (
         <div className="load-more">
@@ -1328,7 +1372,7 @@ function PaginatedEntries({
             variant="outline"
             onClick={() => setLimit((v) => v + 30)}
           >
-            Xem thêm ({entries.length - limit} bản)
+            {en ? 'Load more' : 'Xem thêm'} ({entries.length - limit} {en ? 'builds' : 'bản'})
           </Button>
         </div>
       )}
@@ -1336,14 +1380,16 @@ function PaginatedEntries({
   );
 }
 function RecoveryView() {
+  const { language } = useLanguage();
+  const en = language === 'en';
   const result = useRemote<Entry[]>('/api/recovery');
   const [selected, setSelected] = useState<Entry | null>(null);
   return (
     <>
       <Heading
-        eyebrow="RECOVERY & KHÔI PHỤC"
+        eyebrow={en ? 'RECOVERY & RESTORATION' : 'RECOVERY & KHÔI PHỤC'}
         title="Recovery / OFOX"
-        description="Trang phát hành và bản recovery theo thiết bị."
+        description={en ? 'Recovery releases organized by device.' : 'Trang phát hành và bản recovery theo thiết bị.'}
       />
       {result.loading ? (
         <Loading />
@@ -1361,11 +1407,11 @@ function RecoveryView() {
       <div className="panel resource-card">
         <ShieldCheck size={24} />
         <div>
-          <h3>Cứu máy / EDL</h3>
-          <p>Tra cứu các gói hỗ trợ khôi phục trong kho nguồn.</p>
+          <h3>{en ? 'Device rescue / EDL' : 'Cứu máy / EDL'}</h3>
+          <p>{en ? 'Browse recovery packages in the source archive.' : 'Tra cứu các gói hỗ trợ khôi phục trong kho nguồn.'}</p>
         </div>
         <a className="action secondary-action" href={browse('archive', 'EDL')}>
-          Mở danh mục
+          {en ? 'Open catalog' : 'Mở danh mục'}
           <ArrowUpRight size={16} />
         </a>
       </div>
@@ -1374,6 +1420,8 @@ function RecoveryView() {
   );
 }
 function StatsView() {
+  const { language } = useLanguage();
+  const en = language === 'en';
   const result = useRemote<Cached<Traffic>[]>('/api/stats');
   const [live, setLive] = useState<Cached<Traffic>[]>();
   useEffect(() => {
@@ -1391,12 +1439,12 @@ function StatsView() {
   return (
     <>
       <Heading
-        eyebrow="TRẠNG THÁI MÁY CHỦ"
-        title="Theo dõi kho tải"
-        description="Lưu lượng của máy chủ nguồn, cập nhật mỗi 30 giây khi bạn đang xem."
+        eyebrow={en ? 'SERVER STATUS' : 'TRẠNG THÁI MÁY CHỦ'}
+        title={en ? 'Download server monitor' : 'Theo dõi kho tải'}
+        description={en ? 'Source server traffic, refreshed every 30 seconds while you watch.' : 'Lưu lượng của máy chủ nguồn, cập nhật mỗi 30 giây khi bạn đang xem.'}
         extra={
           <span className="subtle-pill">
-            <Activity size={16} /> Lưu lượng nguồn
+            <Activity size={16} /> {en ? 'Source traffic' : 'Lưu lượng nguồn'}
           </span>
         }
       />
@@ -1418,12 +1466,12 @@ function StatsView() {
                 <h2>{d.name}</h2>
                 <span className={`state-badge ${stale ? 'is-stale' : ''}`}>
                   <span className="status-dot" />
-                  {stale ? 'Dữ liệu cũ / chưa xác minh' : 'Đang cập nhật'}
+                  {stale ? (en ? 'Stale / unverified data' : 'Dữ liệu cũ / chưa xác minh') : (en ? 'Updating' : 'Đang cập nhật')}
                 </span>
               </div>
               <div className="stats-grid">
                 <div className="panel stat-card prominent">
-                  <span>Băng thông đang tải lên</span>
+                  <span>{en ? 'Current bandwidth' : 'Băng thông đang tải lên'}</span>
                   <strong>
                     {d.speed != null
                       ? d.speed.toLocaleString('vi-VN', {
@@ -1440,11 +1488,11 @@ function StatsView() {
                       <span>
                         {
                           [
-                            'Hôm nay',
-                            '24 giờ qua',
-                            'Tháng này',
-                            'Năm nay',
-                            'Tổng cộng',
+                            en ? 'Today' : 'Hôm nay',
+                            en ? 'Last 24 hours' : '24 giờ qua',
+                            en ? 'This month' : 'Tháng này',
+                            en ? 'This year' : 'Năm nay',
+                            en ? 'Total' : 'Tổng cộng',
                           ][j]
                         }
                       </span>
@@ -1455,10 +1503,10 @@ function StatsView() {
               </div>
               <p className="stats-note">
                 {d.updatedAt
-                  ? 'Nguồn cập nhật: ' + timeLabel(d.updatedAt)
-                  : 'Nguồn chưa cung cấp thời điểm cập nhật đáng tin cậy.'}
+                  ? (en ? 'Source updated: ' : 'Nguồn cập nhật: ') + timeLabel(d.updatedAt)
+                  : (en ? 'The source has not provided a reliable update time.' : 'Nguồn chưa cung cấp thời điểm cập nhật đáng tin cậy.')}
                 {stale
-                  ? ' · Không dùng các số này như trạng thái trực tiếp.'
+                  ? en ? ' · Do not treat these numbers as live status.' : ' · Không dùng các số này như trạng thái trực tiếp.'
                   : ''}
               </p>
               {(d.error || row.error) && (
@@ -1472,13 +1520,15 @@ function StatsView() {
   );
 }
 function ChangelogView() {
+  const { language } = useLanguage();
+  const en = language === 'en';
   const result = useRemote<SiteLog[]>('/api/logs');
   return (
     <>
       <Heading
-        eyebrow="NHẬT KÝ CẬP NHẬT"
-        title="Changelog của website"
-        description="Các thay đổi của Kho ROM Việt. Changelog ROM nằm trong từng bản tải."
+        eyebrow={en ? 'UPDATE LOG' : 'NHẬT KÝ CẬP NHẬT'}
+        title={en ? 'Website changelog' : 'Changelog của website'}
+        description={en ? 'Website changes. ROM changelogs are included with each download.' : 'Các thay đổi của Kho ROM Việt. Changelog ROM nằm trong từng bản tải.'}
       />
       {result.loading ? (
         <Loading />
@@ -1498,37 +1548,41 @@ function ChangelogView() {
         </div>
       ) : (
         <EmptyState
-          title="Chưa có cập nhật được đăng"
-          description="Nhật ký của website sẽ xuất hiện ở đây sau khi quản trị viên xuất bản."
+          title={en ? 'No updates published' : 'Chưa có cập nhật được đăng'}
+          description={en ? 'Website updates will appear here after publication.' : 'Nhật ký của website sẽ xuất hiện ở đây sau khi quản trị viên xuất bản.'}
         />
       )}
     </>
   );
 }
 function DonateView({ config }: { config: Settings }) {
+  const { language } = useLanguage();
+  const en = language === 'en';
   const d = config.donate;
   return (
     <>
       <Heading
-        eyebrow="ĐỒNG HÀNH CÙNG WEBSITE"
-        title="Ủng hộ"
-        description="Thông tin do quản trị viên website cung cấp."
+        eyebrow={en ? 'SUPPORT THE WEBSITE' : 'ĐỒNG HÀNH CÙNG WEBSITE'}
+        title={en ? 'Support' : 'Ủng hộ'}
+        description={en ? 'Information provided by the website administrator.' : 'Thông tin do quản trị viên website cung cấp.'}
       />
       <div className="panel donate-card">
         <Heart size={30} />
         <Markdown
           content={
             d?.text ||
-            'Mọi sự ủng hộ của bạn là nguồn động lực lớn để duy trì máy chủ tải tốc độ cao và phát triển kho lưu trữ ROM OnePlus cho cộng đồng.'
+            en
+              ? 'Your support helps maintain a fast download server and grow the OnePlus ROM archive for the community.'
+              : 'Mọi sự ủng hộ của bạn là nguồn động lực lớn để duy trì máy chủ tải tốc độ cao và phát triển kho lưu trữ ROM OnePlus cho cộng đồng.'
           }
           className="preserve-text"
         />
-        {d?.qr && <img className="donate-qr" src={d.qr} alt="Mã QR ủng hộ" />}
+        {d?.qr && <img className="donate-qr" src={d.qr} alt={en ? 'Support QR code' : 'Mã QR ủng hộ'} />}
         <dl className="bank-details">
           {[
-            [d.bank, 'Ngân hàng'],
-            [d.holder, 'Chủ tài khoản'],
-            [d.account, 'Số tài khoản'],
+            [d.bank, en ? 'Bank' : 'Ngân hàng'],
+            [d.holder, en ? 'Account holder' : 'Chủ tài khoản'],
+            [d.account, en ? 'Account number' : 'Số tài khoản'],
           ].map(
             ([v, k]) =>
               v && (
@@ -1540,11 +1594,11 @@ function DonateView({ config }: { config: Settings }) {
           )}
         </dl>
         {d.account && (
-          <CopyButton value={d.account} label="Sao chép số tài khoản" />
+          <CopyButton value={d.account} label={en ? 'Copy account number' : 'Sao chép số tài khoản'} />
         )}
         {d.url && (
           <External href={d.url} primary>
-            Mở liên kết ủng hộ
+            {en ? 'Open support link' : 'Mở liên kết ủng hộ'}
           </External>
         )}
       </div>

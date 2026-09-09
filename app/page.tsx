@@ -1,4 +1,9 @@
 import { Library } from '@/components/rom/library';
+import { LanguageProvider } from '@/lib/language';
 export default function Home() {
-  return <Library />;
+  return (
+    <LanguageProvider>
+      <Library />
+    </LanguageProvider>
+  );
 }

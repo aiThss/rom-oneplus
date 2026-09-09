@@ -11,6 +11,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useLanguage } from '@/lib/language';
 import {
   Empty,
   EmptyHeader,
@@ -86,11 +87,13 @@ export function useRemote<T>(url: string | null) {
 }
 export function CopyButton({
   value,
-  label = 'Sao chép',
+  label,
 }: {
   value: string;
   label?: string;
 }) {
+  const { language } = useLanguage();
+  const en = language === 'en';
   const [done, setDone] = useState(false);
   const [error, setError] = useState(false);
   return (
@@ -110,11 +113,13 @@ export function CopyButton({
         }}
       >
         {done ? <Check size={15} /> : <Copy size={15} />}{' '}
-        {done ? 'Đã sao chép' : label}
+        {done ? (en ? 'Copied' : 'Đã sao chép') : label || (en ? 'Copy' : 'Sao chép')}
       </Button>
       {error && (
         <output className="field-error">
-          Không thể sao chép tự động. Bạn có thể chọn và chép văn bản.
+          {en
+            ? 'Automatic copy failed. Select and copy the text manually.'
+            : 'Không thể sao chép tự động. Bạn có thể chọn và chép văn bản.'}
         </output>
       )}
     </span>
@@ -142,27 +147,35 @@ export function External({
   );
 }
 export function EmptyState({
-  title = 'Chưa có dữ liệu',
-  description = 'Thử chọn danh mục khác hoặc quay lại sau.',
+  title,
+  description,
 }: {
   title?: string;
   description?: string;
 }) {
+  const { language } = useLanguage();
+  const en = language === 'en';
+  const resolvedTitle = title || (en ? 'No data available' : 'Chưa có dữ liệu');
+  const resolvedDescription =
+    description ||
+    (en ? 'Try another category or come back later.' : 'Thử chọn danh mục khác hoặc quay lại sau.');
   return (
     <Empty className="panel empty-state">
       <EmptyHeader>
         <Inbox size={30} />
-        <EmptyTitle>{title}</EmptyTitle>
-        <EmptyDescription>{description}</EmptyDescription>
+        <EmptyTitle>{resolvedTitle}</EmptyTitle>
+        <EmptyDescription>{resolvedDescription}</EmptyDescription>
       </EmptyHeader>
     </Empty>
   );
 }
 export function Loading() {
+  const { language } = useLanguage();
+  const en = language === 'en';
   return (
     <div
       className="loading-grid"
-      aria-label="Đang tải dữ liệu"
+      aria-label={en ? 'Loading data' : 'Đang tải dữ liệu'}
       aria-busy="true"
     >
       {[1, 2, 3, 4].map((i) => (
@@ -178,17 +191,19 @@ export function ErrorState({
   error: string;
   retry?: () => void;
 }) {
+  const { language } = useLanguage();
+  const en = language === 'en';
   return (
     <div role="alert" className="notice error">
       <AlertCircle size={19} />
       <div className="grow">
-        <strong>Chưa kết nối được dữ liệu</strong>
+        <strong>{en ? 'Could not connect to data' : 'Chưa kết nối được dữ liệu'}</strong>
         <p>{error}</p>
       </div>
       {retry && (
         <Button variant="outline" className="action" onClick={retry}>
           <RefreshCw size={15} />
-          Thử lại
+          {en ? 'Retry' : 'Thử lại'}
         </Button>
       )}
     </div>
@@ -236,6 +251,8 @@ export function SearchPicker({
   options: string[];
   label: string;
 }) {
+  const { language } = useLanguage();
+  const en = language === 'en';
   return (
     <label className="filter-label">
       <span>{label}</span>
@@ -251,7 +268,7 @@ export function SearchPicker({
           className="w-full min-w-0"
         />
         <ComboboxContent>
-          <ComboboxEmpty>Không tìm thấy thiết bị.</ComboboxEmpty>
+          <ComboboxEmpty>{en ? 'No devices found.' : 'Không tìm thấy thiết bị.'}</ComboboxEmpty>
           <ComboboxList>
             {(item: string) => (
               <ComboboxItem

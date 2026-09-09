@@ -3,7 +3,7 @@
 /* eslint-disable react/react-compiler */
 // Full page links initialize URL state; logo/QR URLs are served directly without an image proxy.
 /* eslint-disable nextjs/no-html-link-for-pages, nextjs/no-img-element */
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   Grid2X2,
   ShieldCheck,
@@ -28,6 +28,7 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
+import { useLanguage } from '@/lib/language';
 const SmartphoneIcon = Smartphone;
 export const navigation = [
   { id: 'archive', label: 'Kho phần mềm', icon: Grid2X2, hidden: false },
@@ -71,6 +72,7 @@ export function Shell({
   admin?: boolean;
 }) {
   const [dark, setDark] = useState(false);
+  const { language, setLanguage } = useLanguage();
   useEffect(() => {
     setDark(localStorage.getItem('rom-theme') === 'dark');
   }, []);
@@ -85,6 +87,64 @@ export function Shell({
         .filter((n) => n && !n.hidden)
         .filter(Boolean)
     : navigation;
+  const labels = useMemo(
+    () =>
+      language === 'en'
+        ? {
+            library: 'Library',
+            recovery: 'Recovery / OFOX',
+            ota: 'Firmware OTA',
+            root: 'Root Guide',
+            mirrors: 'SourceForge',
+            stats: 'Download Server',
+            changelog: 'Changelog',
+            donate: 'Support',
+            community: 'Community',
+            source: 'Community data source',
+            sourceDesc: 'Files served from the source server.',
+            admin: 'Private workspace',
+            adminBar: 'Admin workspace',
+            appBar: 'Software & firmware library',
+            language: 'English',
+            light: 'Switch to light theme',
+            dark: 'Switch to dark theme',
+          }
+        : {
+            library: 'Kho phần mềm',
+            recovery: 'Recovery / OFOX',
+            ota: 'Firmware OTA',
+            root: 'Root Guide',
+            mirrors: 'SourceForge',
+            stats: 'Máy chủ tải',
+            changelog: 'Changelog',
+            donate: 'Ủng hộ',
+            community: 'Cộng đồng',
+            source: 'Kho dữ liệu cộng đồng',
+            sourceDesc: 'File tải từ máy chủ nguồn.',
+            admin: 'Không gian riêng tư',
+            adminBar: 'Không gian quản trị',
+            appBar: 'Kho phần mềm & firmware',
+            language: 'Tiếng Việt',
+            light: 'Chuyển giao diện sáng',
+            dark: 'Chuyển giao diện tối',
+          },
+    [language],
+  );
+  const translatedLabel = (id: string, fallback: string) =>
+    ({
+      archive: labels.library,
+      recovery: labels.recovery,
+      ota: labels.ota,
+      'root-guide': labels.root,
+      mirrors: labels.mirrors,
+      stats: labels.stats,
+      changelog: labels.changelog,
+    })[id] || fallback;
+  const toggleLanguage = () => {
+    const next = language === 'vi' ? 'en' : 'vi';
+    localStorage.setItem('rom-language', next);
+    setLanguage(next);
+  };
   return (
     <SidebarProvider
       style={
@@ -96,7 +156,7 @@ export function Shell({
         } as React.CSSProperties
       }
       className="rom-app"
-    >
+      >
       <Sidebar variant="inset" className="rom-sidebar">
         <SidebarHeader className="brand-header">
           <a href="/" className="brand">
@@ -108,7 +168,7 @@ export function Shell({
           </a>
         </SidebarHeader>
         <SidebarContent className="nav-content">
-          <div className="nav-label">Thư viện</div>
+          <div className="nav-label">{language === 'en' ? 'Library' : 'Thư viện'}</div>
           <nav>
             {links.map(
               (n) =>
@@ -119,7 +179,7 @@ export function Shell({
                     href={`/?view=${n.id}`}
                   >
                     <n.icon size={18} />
-                    {n.label}
+                    {translatedLabel(n.id, n.label)}
                     {n.id === 'stats' && <span className="status-dot" />}
                   </a>
                 ),
@@ -130,13 +190,13 @@ export function Shell({
                 href="/?view=donate"
               >
                 <Heart size={18} />
-                Ủng hộ
+                {labels.donate}
               </a>
             )}
           </nav>
           {groups.length > 0 && (
             <>
-              <div className="nav-label spaced">Cộng đồng</div>
+              <div className="nav-label spaced">{labels.community}</div>
               {groups.map((g, i) => (
                 <a
                   className="nav-link"
@@ -154,12 +214,12 @@ export function Shell({
         </SidebarContent>
         <SidebarFooter className="nav-footer">
           <div className="source-label">
-            <span className="status-dot" /> Kho dữ liệu cộng đồng
+            <span className="status-dot" /> {labels.source}
           </div>
-          <p>File tải từ máy chủ nguồn.</p>
+          <p>{labels.sourceDesc}</p>
           {admin && (
             <span className="admin-link text-link">
-              <ShieldCheck size={16} /> Không gian riêng tư
+              <ShieldCheck size={16} /> {labels.admin}
             </span>
           )}
         </SidebarFooter>
@@ -171,16 +231,34 @@ export function Shell({
               <Menu size={20} />
             </SidebarTrigger>
             <span className="topbar-label">
-              {admin ? 'Không gian quản trị' : 'Kho phần mềm & firmware'}
+              {admin ? labels.adminBar : labels.appBar}
             </span>
           </div>
           <div className="topbar-actions">
-            <span className="language-tag">Tiếng Việt</span>
+            <button
+              type="button"
+              className="language-switcher"
+              onClick={toggleLanguage}
+              aria-label={
+                language === 'vi'
+                  ? 'Switch language to English'
+                  : 'Chuyển ngôn ngữ sang tiếng Việt'
+              }
+              title={
+                language === 'vi'
+                  ? 'Switch to English'
+                  : 'Chuyển sang tiếng Việt'
+              }
+            >
+              <span className={language === 'vi' ? 'active' : ''}>VI</span>
+              <span className="language-divider">/</span>
+              <span className={language === 'en' ? 'active' : ''}>EN</span>
+            </button>
             <Button
               variant="ghost"
               size="icon"
               aria-label={
-                dark ? 'Chuyển giao diện sáng' : 'Chuyển giao diện tối'
+                dark ? labels.light : labels.dark
               }
               onClick={() => {
                 localStorage.setItem('rom-theme', dark ? 'light' : 'dark');
@@ -194,16 +272,7 @@ export function Shell({
         <main className="main-content">{children}</main>
         <footer className="page-footer">
           <span>{name}</span>
-          <span>
-            ROM Archive ·{' '}
-            <a
-              href="https://roms.danielspringer.at/"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Daniel Springer <ArrowUpRight size={12} />
-            </a>
-          </span>
+          <span>ROM Archive</span>
         </footer>
       </div>
     </SidebarProvider>

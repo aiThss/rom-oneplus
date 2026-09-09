@@ -335,11 +335,49 @@ textarea {
   font-size: 13px;
   color: var(--muted);
 }
-.language-tag {
-  font-size: 12px;
-  border-right: 1px solid var(--border);
-  padding-right: 20px;
-  color: var(--muted);
+.language-switcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  width: 86px;
+  height: 34px;
+  padding: 3px;
+  border: 1px solid #b7c4d6;
+  border-radius: 8px;
+  background: #dbe5f2;
+  color: #40536b;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+.language-switcher:hover {
+  border-color: #8fa4bd;
+  background: #dbe5f2;
+  color: #24364d;
+}
+.language-switcher:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+.language-switcher > span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 26px;
+  border-radius: 5px;
+}
+.language-switcher > span.active {
+  background: #087ff5;
+  color: #fff;
+  box-shadow: 0 2px 5px rgba(8, 127, 245, 0.28);
+}
+.language-divider {
+  width: 0 !important;
+  height: 0 !important;
+  color: var(--border);
 }
 .mobile-menu {
   display: none;
@@ -780,9 +818,6 @@ textarea {
   .topbar-start,
   .topbar-actions {
     gap: 8px;
-  }
-  .language-tag {
-    display: none;
   }
   .page-heading {
     align-items: flex-start;

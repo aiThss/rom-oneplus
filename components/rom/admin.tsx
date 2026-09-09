@@ -63,6 +63,7 @@ import {
   type Cached,
   type Catalog,
 } from '@/lib/model';
+import { useLanguage } from '@/lib/language';
 type AdminData = {
   settings: Settings;
   overrides: Override[];
@@ -105,6 +106,8 @@ function Login({
   initialized: boolean;
   onLogin: () => void;
 }) {
+  const { language } = useLanguage();
+  const en = language === 'en';
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -116,11 +119,11 @@ function Login({
           <span className="login-icon">
             <LockKeyhole size={28} />
           </span>
-          <div className="eyebrow">KHÔNG GIAN QUẢN TRỊ</div>
+          <div className="eyebrow">{en ? 'ADMIN WORKSPACE' : 'KHÔNG GIAN QUẢN TRỊ'}</div>
           <h1>
-            Chào mừng trở lại<span>.</span>
+            {en ? 'Welcome back' : 'Chào mừng trở lại'}<span>.</span>
           </h1>
-          <p>Đăng nhập để quản lý thư viện của bạn.</p>
+          <p>{en ? 'Sign in to manage your library.' : 'Đăng nhập để quản lý thư viện của bạn.'}</p>
           <form
             onSubmit={async (e) => {
               e.preventDefault();
@@ -137,7 +140,7 @@ function Login({
               }
             }}
           >
-            <Field label="Tên đăng nhập">
+            <Field label={en ? 'Username' : 'Tên đăng nhập'}>
               <Input
                 autoComplete="username"
                 value={username}
@@ -145,7 +148,7 @@ function Login({
                 required
               />
             </Field>
-            <Field label="Mật khẩu">
+            <Field label={en ? 'Password' : 'Mật khẩu'}>
               <Input
                 type="password"
                 autoComplete="current-password"
@@ -161,7 +164,7 @@ function Login({
             )}
             {!initialized && (
               <p className="field-error">
-                Chưa thiết lập tài khoản quản trị trên máy chủ.
+                {en ? 'The admin account has not been configured on the server.' : 'Chưa thiết lập tài khoản quản trị trên máy chủ.'}
               </p>
             )}
             <Button
@@ -169,13 +172,13 @@ function Login({
               className="action login-submit"
               disabled={busy || !initialized}
             >
-              {busy ? 'Đang đăng nhập…' : 'Đăng nhập'}
+              {busy ? (en ? 'Signing in…' : 'Đang đăng nhập…') : (en ? 'Sign in' : 'Đăng nhập')}
               <ArrowUpRight size={16} />
             </Button>
           </form>
           <a href="/" className="text-link">
             <ArrowLeft size={14} />
-            Về kho phần mềm
+            {en ? 'Back to software library' : 'Về kho phần mềm'}
           </a>
         </div>
       </div>
@@ -216,6 +219,8 @@ function Toggle({
   );
 }
 function Dashboard({ onLogout }: { onLogout: () => void }) {
+  const { language } = useLanguage();
+  const en = language === 'en';
   const state = useRemote<AdminData>('/api/aiths/data');
   const [draft, setDraft] = useState<Settings>(defaultSettings);
   const [notice, setNotice] = useState('');
@@ -248,15 +253,15 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
     <Shell admin {...(state.data?.settings || defaultSettings)} donate={false}>
       <div className="page-heading admin-heading">
         <div>
-          <div className="eyebrow">KHÔNG GIAN QUẢN TRỊ</div>
+          <div className="eyebrow">{en ? 'ADMIN WORKSPACE' : 'KHÔNG GIAN QUẢN TRỊ'}</div>
           <h1>
-            Thư viện của bạn<span>.</span>
+            {en ? 'Your library' : 'Thư viện của bạn'}<span>.</span>
           </h1>
-          <p>Nội dung, nhận diện và kết nối dữ liệu.</p>
+          <p>{en ? 'Content, branding, and data connections.' : 'Nội dung, nhận diện và kết nối dữ liệu.'}</p>
         </div>
         <div className="action-row">
           <a className="action secondary-action" href="/" target="_blank">
-            Xem website
+            {en ? 'View website' : 'Xem website'}
             <ArrowUpRight size={15} />
           </a>
           <Button
@@ -268,7 +273,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
             }}
           >
             <LogOut size={16} />
-            Đăng xuất
+            {en ? 'Sign out' : 'Đăng xuất'}
           </Button>
         </div>
       </div>
@@ -285,11 +290,11 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
             </div>
             <Tabs defaultValue="settings" className="admin-tabs">
               <TabsList className="admin-tabs-list">
-                <TabsTrigger value="settings">Nhận diện</TabsTrigger>
-                <TabsTrigger value="catalog">Danh mục nguồn</TabsTrigger>
-                <TabsTrigger value="custom">Liên kết riêng</TabsTrigger>
-                <TabsTrigger value="journal">Changelog web</TabsTrigger>
-                <TabsTrigger value="sync">Đồng bộ</TabsTrigger>
+                <TabsTrigger value="settings">{en ? 'Branding' : 'Nhận diện'}</TabsTrigger>
+                <TabsTrigger value="catalog">{en ? 'Source catalog' : 'Danh mục nguồn'}</TabsTrigger>
+                <TabsTrigger value="custom">{en ? 'Custom links' : 'Liên kết riêng'}</TabsTrigger>
+                <TabsTrigger value="journal">{en ? 'Web changelog' : 'Changelog web'}</TabsTrigger>
+                <TabsTrigger value="sync">{en ? 'Sync' : 'Đồng bộ'}</TabsTrigger>
               </TabsList>
               <TabsContent value="settings">
                 <form
@@ -302,9 +307,9 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                     <div className="panel admin-panel">
                       <div className="panel-heading">
                         <Settings2 size={20} />
-                        <h2>Nhận diện website</h2>
+                        <h2>{en ? 'Website branding' : 'Nhận diện website'}</h2>
                       </div>
-                      <Field label="Tên website">
+                      <Field label={en ? 'Website name' : 'Tên website'}>
                         <Input
                           value={draft.name}
                           maxLength={60}
@@ -314,7 +319,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                           required
                         />
                       </Field>
-                      <Field label="Màu điểm nhấn">
+                      <Field label={en ? 'Accent color' : 'Màu điểm nhấn'}>
                         <div className="color-field">
                           <Input
                             type="color"
@@ -342,14 +347,14 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                         style={{ borderColor: draft.accent }}
                       >
                         {draft.logo ? (
-                          <img src={draft.logo} alt="Logo xem trước" />
+                          <img src={draft.logo} alt={en ? 'Logo preview' : 'Logo xem trước'} />
                         ) : (
                           <span style={{ background: draft.accent }}>
                             <HardDrive size={25} />
                           </span>
                         )}
                         <div>
-                          <h3>{draft.name || 'Tên website'}</h3>
+                          <h3>{draft.name || (en ? 'Website name' : 'Tên website')}</h3>
                           <p>ROM, firmware & recovery</p>
                         </div>
                       </div>
@@ -357,10 +362,10 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                     <div className="panel admin-panel">
                       <div className="panel-heading">
                         <Folder size={20} />
-                        <h2>Điều hướng</h2>
+                        <h2>{en ? 'Navigation' : 'Điều hướng'}</h2>
                       </div>
                       <p className="panel-caption">
-                        Bật, tắt và sắp xếp các mục trên website.
+                        {en ? 'Enable, disable, and reorder website sections.' : 'Bật, tắt và sắp xếp các mục trên website.'}
                       </p>
                       {draft.sections
                         .sort((a, b) => a.order - b.order)
@@ -368,7 +373,9 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                           <div className="ordered-row" key={s.id}>
                             <Toggle
                               label={
-                                navigation.find((n) => n.id === s.id)?.label ||
+                                (en
+                                  ? ({ archive: 'Library', recovery: 'Recovery / OFOX', ota: 'Firmware OTA', 'root-guide': 'Root Guide', mirrors: 'SourceForge', stats: 'Download Server', changelog: 'Changelog' } as Record<string, string>)[s.id]
+                                  : navigation.find((n) => n.id === s.id)?.label) ||
                                 s.id
                               }
                               checked={s.enabled}
@@ -385,7 +392,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                               type="button"
                               variant="ghost"
                               size="icon"
-                              aria-label={'Đưa lên ' + s.id}
+                              aria-label={(en ? 'Move up ' : 'Đưa lên ') + s.id}
                               disabled={i === 0}
                               onClick={() => {
                                 const arr = [...draft.sections];
@@ -405,7 +412,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                               type="button"
                               variant="ghost"
                               size="icon"
-                              aria-label={'Đưa xuống ' + s.id}
+                              aria-label={(en ? 'Move down ' : 'Đưa xuống ') + s.id}
                               disabled={i === draft.sections.length - 1}
                               onClick={() => {
                                 const arr = [...draft.sections];
@@ -427,10 +434,11 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                   </div>
                   <div className="admin-columns">
                     <div className="panel admin-panel">
-                      <h2>Hãng & thiết bị</h2>
+                      <h2>{en ? 'Brands & devices' : 'Hãng & thiết bị'}</h2>
                       <p className="panel-caption">
-                        OnePlus, Xiaomi, Redmi và POCO được bật mặc định. Bộ lọc
-                        áp dụng cho cả kho và OTA.
+                        {en
+                          ? 'OnePlus, Xiaomi, Redmi, and POCO are enabled by default. Filters apply to both the archive and OTA.'
+                          : 'OnePlus, Xiaomi, Redmi và POCO được bật mặc định. Bộ lọc áp dụng cho cả kho và OTA.'}
                       </p>
                       <div className="brand-toggles">
                         {[
@@ -459,9 +467,9 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                       <DeviceSettings value={draft} onChange={setDraft} />
                     </div>
                     <div className="panel admin-panel">
-                      <h2>Nhóm cộng đồng</h2>
+                      <h2>{en ? 'Community groups' : 'Nhóm cộng đồng'}</h2>
                       <p className="panel-caption">
-                        Để danh sách trống để ẩn phần cộng đồng.
+                        {en ? 'Leave the list empty to hide the community section.' : 'Để danh sách trống để ẩn phần cộng đồng.'}
                       </p>
                       <LinksEditor
                         value={draft.groups}
@@ -470,9 +478,9 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                     </div>
                   </div>
                   <div className="panel admin-panel">
-                    <h2>Thông tin ủng hộ</h2>
+                    <h2>{en ? 'Support information' : 'Thông tin ủng hộ'}</h2>
                     <Toggle
-                      label="Hiển thị mục ủng hộ"
+                      label={en ? 'Show support section' : 'Hiển thị mục ủng hộ'}
                       checked={draft.donate.enabled}
                       onChange={(enabled) =>
                         setDraft({
@@ -483,7 +491,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                     />
                     <div className="admin-columns">
                       <div>
-                        <Field label="Nội dung">
+                        <Field label={en ? 'Content' : 'Nội dung'}>
                           <Textarea
                             value={draft.donate.text}
                             onChange={(e) =>
@@ -503,7 +511,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                             <Field
                               key={key}
                               label={
-                                ['Ngân hàng', 'Chủ tài khoản', 'Số tài khoản'][
+                                (en ? ['Bank', 'Account holder', 'Account number'] : ['Ngân hàng', 'Chủ tài khoản', 'Số tài khoản'])[
                                   i
                                 ]
                               }
@@ -526,7 +534,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                       </div>
                       <div>
                         <ImageField
-                          label="Ảnh QR"
+                          label={en ? 'QR image' : 'Ảnh QR'}
                           value={draft.donate.qr}
                           onChange={(qr) =>
                             setDraft({
@@ -535,7 +543,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                             })
                           }
                         />
-                        <Field label="Liên kết ủng hộ (tùy chọn)">
+                        <Field label={en ? 'Support link (optional)' : 'Liên kết ủng hộ (tùy chọn)'}>
                           <Input
                             type="url"
                             value={draft.donate.url}
@@ -555,7 +563,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                     </div>
                   </div>
                   <div className="save-bar">
-                    <span>Thay đổi chỉ xuất hiện sau khi lưu.</span>
+                    <span>{en ? 'Changes appear after saving.' : 'Thay đổi chỉ xuất hiện sau khi lưu.'}</span>
                     <div className="action-row">
                       <Button
                         type="button"
@@ -564,11 +572,11 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                         onClick={() => setPreview(true)}
                       >
                         <Eye size={16} />
-                        Xem trước
+                        {en ? 'Preview' : 'Xem trước'}
                       </Button>
                       <Button type="submit" className="action" disabled={busy}>
                         <Save size={16} />
-                        {busy ? 'Đang lưu…' : 'Lưu cấu hình'}
+                        {busy ? (en ? 'Saving…' : 'Đang lưu…') : (en ? 'Save settings' : 'Lưu cấu hình')}
                       </Button>
                     </div>
                   </div>
@@ -602,9 +610,9 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
             <Dialog open={preview} onOpenChange={setPreview}>
               <DialogContent className="preview-dialog">
                 <DialogHeader>
-                  <DialogTitle>Xem trước cấu hình</DialogTitle>
+                  <DialogTitle>{en ? 'Settings preview' : 'Xem trước cấu hình'}</DialogTitle>
                   <DialogDescription>
-                    Thông tin chưa lưu trong phiên chỉnh sửa này.
+                    {en ? 'Unsaved information from this editing session.' : 'Thông tin chưa lưu trong phiên chỉnh sửa này.'}
                   </DialogDescription>
                 </DialogHeader>
                 <div
@@ -627,7 +635,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                         </span>
                       ))}
                   </div>
-                  <p>Hãng: {draft.brands.join(', ') || 'Chưa chọn'}</p>
+                  <p>{en ? 'Brands: ' : 'Hãng: '}{draft.brands.join(', ') || (en ? 'None selected' : 'Chưa chọn')}</p>
                   {draft.groups.map((g, i) => (
                     <p key={i}>
                       {g.name} · {g.url}
@@ -635,7 +643,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                   ))}
                   {draft.donate.enabled && (
                     <>
-                      <h2>Ủng hộ</h2>
+                      <h2>{en ? 'Support' : 'Ủng hộ'}</h2>
                       <p className="preserve-text">{draft.donate.text}</p>
                       <p>
                         {draft.donate.bank} · {draft.donate.holder} ·{' '}
