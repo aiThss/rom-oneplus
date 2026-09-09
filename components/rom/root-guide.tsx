@@ -417,7 +417,7 @@ export function RootGuideView() {
               : 'Chọn model và bản firmware đang hoạt động trên máy của bạn để đảm bảo file vá tương thích tuyệt đối.'}
           </p>
 
-          <div className="ota-filters root-selectors">
+          <div className="root-selectors">
             <SearchPicker
               label={en ? 'Device' : 'Thiết bị'}
               value={device}
