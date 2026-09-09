@@ -2449,6 +2449,7 @@ textarea {
 .root-guide-grid {
   display: grid;
   grid-template-columns: 1fr;
+  align-items: start;
   gap: 20px;
 }
 @media (min-width: 900px) {

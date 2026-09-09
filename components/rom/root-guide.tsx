@@ -321,7 +321,7 @@ export function RootGuideView() {
       <div className="page-heading">
         <div>
           <div className="eyebrow">ROOT & BOOT PATCH</div>
-          <h1>Root Guide · Vá Boot Image & Lệnh Fastboot</h1>
+          <h1>Root Guide · Vá Boot Image & Lệnh Fastboot 4 Bước</h1>
           <p>
             Vá trực tiếp file <code>init_boot.img</code> (hoặc{' '}
             <code>boot.img</code>) từ OTA nguồn bằng KernelSU / SukiSU
