@@ -2468,6 +2468,9 @@ textarea {
   background: var(--card);
   border: 1px solid var(--border);
 }
+.safety-guide-card {
+  width: 100%;
+}
 .step-header {
   display: flex;
   align-items: center;
@@ -2784,17 +2787,71 @@ textarea {
 .terminal-body {
   margin: 0;
   padding: 16px 20px;
+  overflow-x: auto;
+}
+.terminal-markdown.markdown-body {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.55;
+  color: #c9d1d9;
+  background: #0d1117;
+}
+.terminal-markdown.markdown-body h3 {
+  margin: 18px 0 5px;
+  color: #f0f6fc;
+  font-size: 14px;
+  letter-spacing: 0;
+}
+.terminal-markdown.markdown-body h3:first-child {
+  margin-top: 0;
+}
+.terminal-markdown.markdown-body p {
+  margin: 0 0 8px;
+  color: #8b949e;
+}
+.terminal-markdown.markdown-body pre.code-block {
+  position: relative;
+  margin: 0 0 14px;
+  padding: 11px 14px;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  background: #161b22;
+  color: #e6edf3;
   font-family: 'Consolas', 'Courier New', monospace;
   font-size: 13px;
   line-height: 1.6;
-  color: #e6edf3;
-  overflow-x: auto;
-  white-space: pre;
 }
-.terminal-body code {
+.terminal-markdown.markdown-body code {
   color: inherit;
   background: transparent;
   padding: 0;
+}
+.code-block-wrapper {
+  position: relative;
+}
+.code-block-copy {
+  position: absolute;
+  z-index: 1;
+  top: 8px;
+  right: 8px;
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  background: #21262d;
+  color: #8b949e;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.code-block-copy:hover {
+  background: #30363d;
+  color: #f0f6fc;
+}
+.code-block-copy:focus-visible {
+  outline: 2px solid #58a6ff;
+  outline-offset: 2px;
 }
 
 /* Tool links */
@@ -2802,6 +2859,11 @@ textarea {
   display: grid;
   grid-template-columns: 1fr;
   gap: 12px;
+}
+@media (min-width: 900px) {
+  .tool-links-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 .tool-card {
   display: flex;
@@ -2882,6 +2944,11 @@ textarea {
   font-size: 12.5px;
   color: var(--muted-foreground);
   line-height: 1.5;
+}
+.guide-bullet em {
+  color: var(--foreground);
+  font-style: italic;
+  font-weight: 700;
 }
 
 .dark .patch-target-banner {

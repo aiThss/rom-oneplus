@@ -1,4 +1,5 @@
 ﻿import React from 'react';
+import { Check, Copy } from 'lucide-react';
 
 function renderInline(text: string): React.ReactNode[] {
   const tokens: React.ReactNode[] = [];
@@ -195,9 +196,13 @@ function parseBlocks(raw: string): Block[] {
 export function Markdown({
   content,
   className = '',
+  onCodeBlockCopy,
+  copiedCode,
 }: {
   content?: string | null;
   className?: string;
+  onCodeBlockCopy?: (code: string, index: number) => void;
+  copiedCode?: string | null;
 }) {
   if (!content) return null;
   const blocks = parseBlocks(content);
@@ -221,9 +226,26 @@ export function Markdown({
           }
           case 'code':
             return (
-              <pre key={idx} className="code-block selectable">
-                <code>{block.code}</code>
-              </pre>
+              <div key={idx} className="code-block-wrapper">
+                {onCodeBlockCopy && (
+                  <button
+                    type="button"
+                    className="code-block-copy"
+                    onClick={() => onCodeBlockCopy(block.code, idx)}
+                    aria-label="Sao chép lệnh"
+                    title="Sao chép lệnh"
+                  >
+                    {copiedCode === block.code ? (
+                      <Check size={14} />
+                    ) : (
+                      <Copy size={14} />
+                    )}
+                  </button>
+                )}
+                <pre className="code-block selectable">
+                  <code>{block.code}</code>
+                </pre>
+              </div>
             );
           case 'blockquote':
             return (

@@ -7,8 +7,6 @@ import {
   Download,
   ShieldAlert,
   ShieldCheck,
-  Check,
-  Copy,
   ExternalLink,
   Cpu,
   RefreshCw,
@@ -18,6 +16,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Markdown } from './markdown';
 import {
   api,
   useRemote,
@@ -66,7 +65,7 @@ export function RootGuideView() {
 
   // Fastboot command options
   const [useBothSlots, setUseBothSlots] = useState<boolean>(false);
-  const [copiedAll, setCopiedAll] = useState<boolean>(false);
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
   const rawEntries = otaResult.data?.data;
   const allEntries = useMemo(() => rawEntries || [], [rawEntries]);
@@ -264,46 +263,54 @@ export function RootGuideView() {
 
   const partitionName = capability?.partition || 'init_boot';
 
-  // Generate fastboot commands
-  const fastbootCommands = useMemo(() => {
+  const fastbootMarkdown = useMemo(() => {
     const file = downloadFilename || `${partitionName}_patched.img`;
-    if (useBothSlots) {
-      return [
-        `# 1. Đưa thiết bị vào chế độ Fastboot (Bootloader)`,
-        `adb reboot bootloader`,
-        ``,
-        `# 2. Kiểm tra kết nối thiết bị`,
-        `fastboot devices`,
-        ``,
-        `# 3. Flash phân vùng ${partitionName} trên cả Slot A và Slot B`,
-        `fastboot flash ${partitionName}_a ${file}`,
-        `fastboot flash ${partitionName}_b ${file}`,
-        ``,
-        `# 4. Khởi động lại thiết bị vào hệ điều hành`,
-        `fastboot reboot`,
-      ].join('\n');
-    }
+    const flashCommands = useBothSlots
+      ? `fastboot flash init_boot_a ${file}\nfastboot flash init_boot_b ${file}`
+      : `fastboot flash init_boot ${file}`;
 
     return [
-      `# 1. Đưa thiết bị vào chế độ Fastboot (Bootloader)`,
-      `adb reboot bootloader`,
-      ``,
-      `# 2. Kiểm tra kết nối thiết bị`,
-      `fastboot devices`,
-      ``,
-      `# 3. Flash phân vùng ${partitionName}`,
-      `fastboot flash ${partitionName} ${file}`,
-      ``,
-      `# 4. Khởi động lại thiết bị vào hệ điều hành`,
-      `fastboot reboot`,
+      '### Bước 1 · Vào Fastboot',
+      'Khởi động thiết bị vào chế độ Bootloader.',
+      '',
+      '```bash',
+      'adb reboot bootloader',
+      '```',
+      '',
+      '### Bước 2 · Kiểm tra kết nối',
+      'Đảm bảo máy đã được nhận trước khi flash.',
+      '',
+      '```bash',
+      'fastboot devices',
+      '```',
+      '',
+      '### Bước 3 · Flash init_boot',
+      useBothSlots
+        ? 'Kéo file đã vá vừa tải xuống vào CMD để ghi vào cả Slot A và Slot B.'
+        : 'Kéo file đã vá vừa tải xuống vào CMD để có dạng lệnh bên dưới.',
+      '',
+      '```bash',
+      flashCommands,
+      '```',
+      '',
+      '### Bước 4 · Khởi động lại',
+      'Hoàn tất quá trình flash và khởi động vào hệ điều hành.',
+      '',
+      '```bash',
+      'fastboot reboot',
+      '```',
     ].join('\n');
   }, [partitionName, downloadFilename, useBothSlots]);
 
-  const handleCopyAll = async () => {
+  const handleCopyCode = async (code: string) => {
+    const copyText = code.startsWith('fastboot flash init_boot ')
+      ? 'fastboot flash init_boot'
+      : code;
+
     try {
-      await navigator.clipboard.writeText(fastbootCommands);
-      setCopiedAll(true);
-      setTimeout(() => setCopiedAll(false), 2000);
+      await navigator.clipboard.writeText(copyText);
+      setCopiedCode(code);
+      setTimeout(() => setCopiedCode(null), 2000);
     } catch {
       // fallback
     }
@@ -317,7 +324,7 @@ export function RootGuideView() {
           <h1>Root Guide · Vá Boot Image & Lệnh Fastboot</h1>
           <p>
             Vá trực tiếp file <code>init_boot.img</code> (hoặc{' '}
-            <code>boot.img</code>) từ OTA nguồn bằng KernelSU / SukiSU / Magisk
+            <code>boot.img</code>) từ OTA nguồn bằng KernelSU / SukiSU
             và nhận bộ câu lệnh Fastboot tương ứng.
           </p>
         </div>
@@ -326,6 +333,52 @@ export function RootGuideView() {
           All-in-One Fastboot Tool
         </span>
       </div>
+
+      <section className="panel guide-step-card safety-guide-card">
+        <div className="step-header">
+          <span className="step-badge">Lưu ý</span>
+          <h2>Quy trình & Cảnh báo an toàn</h2>
+        </div>
+
+        <div className="guide-steps-list">
+          <div className="guide-bullet">
+            <span className="bullet-num">1</span>
+            <div>
+              <strong>Mở khóa Bootloader (Unlock Bootloader)</strong>
+              <p>
+                Bắt buộc trước khi flash. Vào Cài đặt → Tùy chọn nhà phát
+                triển → Bật <em>Mở khóa OEM</em> và <em>Gỡ lỗi USB</em>. Chạy
+                lệnh <code>fastboot flashing unlock</code> (Thao tác này sẽ
+                xóa sạch dữ liệu máy).
+              </p>
+            </div>
+          </div>
+
+          <div className="guide-bullet">
+            <span className="bullet-num">2</span>
+            <div>
+              <strong>Đúng phiên bản firmware</strong>
+              <p>
+                Tuyệt đối chỉ flash file <code>init_boot</code> đã vá tương
+                ứng đúng với bản build hệ điều hành đang chạy trên thiết bị để
+                tránh lỗi treo bootloop.
+              </p>
+            </div>
+          </div>
+
+          <div className="guide-bullet">
+            <span className="bullet-num">3</span>
+            <div>
+              <strong>Lưu ý cho OnePlus / Máy nội địa Trung Quốc</strong>
+              <p>
+                Nếu bạn sở hữu máy OnePlus nội địa chuyển sang OxygenOS,
+                tuyệt đối không khóa lại bootloader nếu chưa khôi phục quyền
+                truy cập Fastboot tiêu chuẩn.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <div className="root-guide-grid">
         {/* Step 1: OTA Selection */}
@@ -533,15 +586,6 @@ export function RootGuideView() {
                 />
                 <span>Flash cả 2 Slot (A/B)</span>
               </label>
-              <Button
-                variant="outline"
-                size="sm"
-                className="copy-all-btn"
-                onClick={handleCopyAll}
-              >
-                {copiedAll ? <Check size={14} /> : <Copy size={14} />}
-                {copiedAll ? 'Đã sao chép!' : 'Sao chép toàn bộ'}
-              </Button>
             </div>
           </div>
 
@@ -567,14 +611,17 @@ export function RootGuideView() {
                 Terminal / Command Prompt / PowerShell
               </span>
             </div>
-            <pre className="terminal-body">
-              <code>{fastbootCommands}</code>
-            </pre>
+            <Markdown
+              content={fastbootMarkdown}
+              className="terminal-body terminal-markdown"
+              onCodeBlockCopy={handleCopyCode}
+              copiedCode={copiedCode}
+            />
           </div>
         </section>
 
         {/* Step 4: Tools and Manager APKs */}
-        <section className="panel guide-step-card">
+        <section className="panel guide-step-card wide-card">
           <div className="step-header">
             <span className="step-badge">Bước 4</span>
             <h2>Công cụ & Ứng dụng Quản lý Root</h2>
@@ -651,52 +698,6 @@ export function RootGuideView() {
           </div>
         </section>
 
-        {/* Step 5: Safety and Step-by-Step Guide */}
-        <section className="panel guide-step-card">
-          <div className="step-header">
-            <span className="step-badge">Lưu ý</span>
-            <h2>Quy trình & Cảnh báo an toàn</h2>
-          </div>
-
-          <div className="guide-steps-list">
-            <div className="guide-bullet">
-              <span className="bullet-num">1</span>
-              <div>
-                <strong>Mở khóa Bootloader (Unlock Bootloader)</strong>
-                <p>
-                  Bắt buộc trước khi flash. Vào Cài đặt → Tùy chọn nhà phát
-                  triển → Bật <em>Mở khóa OEM</em> và <em>Gỡ lỗi USB</em>. Chạy
-                  lệnh <code>fastboot flashing unlock</code> (Thao tác này sẽ
-                  xóa sạch dữ liệu máy).
-                </p>
-              </div>
-            </div>
-
-            <div className="guide-bullet">
-              <span className="bullet-num">2</span>
-              <div>
-                <strong>Đúng phiên bản firmware</strong>
-                <p>
-                  Tuyệt đối chỉ flash file <code>init_boot</code> đã vá tương
-                  ứng đúng với bản build hệ điều hành đang chạy trên thiết bị để
-                  tránh lỗi treo bootloop.
-                </p>
-              </div>
-            </div>
-
-            <div className="guide-bullet">
-              <span className="bullet-num">3</span>
-              <div>
-                <strong>Lưu ý cho OnePlus / Máy nội địa Trung Quốc</strong>
-                <p>
-                  Nếu bạn sở hữu máy OnePlus nội địa chuyển sang OxygenOS,
-                  tuyệt đối không khóa lại bootloader nếu chưa khôi phục quyền
-                  truy cập Fastboot tiêu chuẩn.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
       </div>
     </div>
   );
