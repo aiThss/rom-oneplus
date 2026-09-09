@@ -32,7 +32,8 @@ export async function isAdmin(req: Request) {
 }
 export function checkOrigin(req: Request) {
   if (
-    req.headers.get('origin') !== (platform.publicOrigin || new URL(req.url).origin) ||
+    req.headers.get('origin') !==
+      (platform.publicOrigin || new URL(req.url).origin) ||
     req.headers.get('x-rom-csrf') !== '1'
   )
     throw new Error('Yêu cầu không cùng nguồn.');
@@ -47,7 +48,9 @@ export async function login(req: Request, username: string, password: string) {
     .bind(bucket)
     .first<{ attempts: number; until: number }>();
   if (
-    (globalLimit && globalLimit.attempts >= 25 && globalLimit.until > Date.now()) ||
+    (globalLimit &&
+      globalLimit.attempts >= 25 &&
+      globalLimit.until > Date.now()) ||
     (clientLimit && clientLimit.attempts >= 5 && clientLimit.until > Date.now())
   )
     throw new Error('Đã thử quá nhiều lần. Vui lòng thử lại sau 15 phút.');
@@ -89,7 +92,10 @@ export async function login(req: Request, username: string, password: string) {
     .prepare('DELETE FROM login_throttle_bucket WHERE bucket=?')
     .bind(bucket)
     .run();
-  await db().prepare('DELETE FROM sessions WHERE expires<?').bind(Date.now()).run();
+  await db()
+    .prepare('DELETE FROM sessions WHERE expires<?')
+    .bind(Date.now())
+    .run();
   const token = randomBytes(32).toString('hex');
   await db()
     .prepare('INSERT INTO sessions(token,expires) VALUES(?,?)')

@@ -26,6 +26,7 @@ import {
   TriangleAlert,
 } from 'lucide-react';
 import { Shell } from './shell';
+import { RootGuideView } from './root-guide';
 import {
   api,
   useRemote,
@@ -132,6 +133,8 @@ export function Library() {
           />
         ) : activeView === 'ota' ? (
           <OtaView />
+        ) : activeView === 'root-guide' ? (
+          <RootGuideView />
         ) : activeView === 'recovery' ? (
           <RecoveryView />
         ) : activeView === 'stats' ? (

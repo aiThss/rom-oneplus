@@ -70,8 +70,8 @@ export function permittedMetadataUrl(raw: string) {
           }
         }
       } else if (
-        (!u.searchParams.has('view') ||
-          ['md5', 'changelog'].includes(u.searchParams.get('view')!))
+        !u.searchParams.has('view') ||
+        ['md5', 'changelog'].includes(u.searchParams.get('view')!)
       ) {
         return u;
       }
@@ -415,7 +415,10 @@ export async function entryDetails(id: string) {
   return entry;
 }
 
-const zipRunning = new Map<string, Promise<ReturnType<typeof parseZipBrowser>>>();
+const zipRunning = new Map<
+  string,
+  Promise<ReturnType<typeof parseZipBrowser>>
+>();
 
 export async function zipBrowser(id: string) {
   const existing = zipRunning.get(id);

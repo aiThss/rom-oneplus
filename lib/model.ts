@@ -1,9 +1,4 @@
-export type Source =
-  | 'archive'
-  | 'sourceforge'
-  | 'xiaomi'
-  | 'ota'
-  | 'custom';
+export type Source = 'archive' | 'sourceforge' | 'xiaomi' | 'ota' | 'custom';
 export type Entry = {
   id: string;
   source: Source;
@@ -106,6 +101,30 @@ export type SiteLog = {
   body: string;
   published: boolean;
 };
+export type RootPatchVariant = {
+  id: string;
+  label: string;
+  version: string;
+};
+export type RootPatchCapability = {
+  available: boolean;
+  partition: 'init_boot' | 'boot';
+  label?: string;
+  variants: RootPatchVariant[];
+  k?: string;
+  csrf?: string;
+  sessionCookie?: string;
+  arb1?: boolean;
+  message?: string;
+};
+export type RootPatchJobStatus = {
+  state: 'queued' | 'running' | 'ready' | 'failed';
+  token?: string;
+  message?: string;
+  wait_seconds?: number;
+  position?: number;
+  reference?: string;
+};
 export const defaultSettings: Settings = {
   name: 'Kho ROM Việt',
   logo: '/logo.png',
@@ -117,6 +136,7 @@ export const defaultSettings: Settings = {
     'xiaomi',
     'recovery',
     'ota',
+    'root-guide',
     'mirrors',
     'stats',
     'changelog',

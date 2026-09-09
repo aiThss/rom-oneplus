@@ -9,6 +9,12 @@ import {
   findEntry,
 } from '@/lib/sources';
 import {
+  checkRootPatchCapability,
+  startRootPatchJob,
+  getRootPatchJobStatus,
+  fetchPatchedDownloadResponse,
+} from '@/lib/root-patch';
+import {
   settings,
   overrides,
   customs,
@@ -183,10 +189,10 @@ export async function GET(req: Request) {
             : route === 'zip'
               ? 'archive'
               : route === 'recovery'
-              ? 'recovery'
-              : route === 'logs'
-                ? 'changelog'
-                : null;
+                ? 'recovery'
+                : route === 'logs'
+                  ? 'changelog'
+                  : null;
     if (section && !config.sections.find((s) => s.id === section)?.enabled)
       return json({ error: 'Danh mục đang tắt.' }, 404);
     if (route === 'catalog')
@@ -220,6 +226,38 @@ export async function GET(req: Request) {
           .filter((l) => l.published)
           .sort((a, b) => b.date.localeCompare(a.date)),
       );
+    if (route === 'root-patch/check') {
+      const device = u.searchParams.get('device') || '';
+      const region = u.searchParams.get('region') || '';
+      const versionIndex = Number(u.searchParams.get('versionIndex') || 0);
+      return json(await checkRootPatchCapability(device, region, versionIndex));
+    }
+    if (route === 'root-patch/status') {
+      const token = u.searchParams.get('token') || '';
+      const session = u.searchParams.get('session') || '';
+      return json(await getRootPatchJobStatus(token, session));
+    }
+    if (route === 'root-patch/download') {
+      const token = u.searchParams.get('token') || '';
+      const session = u.searchParams.get('session') || '';
+      const remoteRes = await fetchPatchedDownloadResponse(token, session);
+      if (!remoteRes.ok) {
+        return json(
+          { error: 'Không tải được file đã vá từ máy chủ nguồn.' },
+          remoteRes.status,
+        );
+      }
+      const headers = new Headers();
+      headers.set(
+        'Content-Type',
+        remoteRes.headers.get('content-type') || 'application/octet-stream',
+      );
+      const disposition = remoteRes.headers.get('content-disposition');
+      if (disposition) headers.set('Content-Disposition', disposition);
+      const length = remoteRes.headers.get('content-length');
+      if (length) headers.set('Content-Length', length);
+      return new Response(remoteRes.body, { status: 200, headers });
+    }
     return json({ error: 'Không tìm thấy.' }, 404);
   } catch (e) {
     console.error('API read:', (e as Error).message);
@@ -249,6 +287,17 @@ export async function POST(req: Request) {
     }
     if (route === 'auth/logout')
       return json({ ok: true }, 200, { 'Set-Cookie': await logout(req) });
+    if (route === 'root-patch/start') {
+      const data = JSON.parse(new TextDecoder().decode(raw));
+      return json(
+        await startRootPatchJob(
+          str(data.k, 200),
+          str(data.csrf, 200),
+          str(data.flavor, 100),
+          str(data.sessionCookie, 500),
+        ),
+      );
+    }
     if (!(await isAdmin(req)))
       return json({ error: 'Cần đăng nhập quản trị.' }, 401);
     if (route === 'aiths/upload') {

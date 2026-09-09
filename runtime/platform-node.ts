@@ -1,4 +1,9 @@
-import { openDatabase, databaseAdapter, fileAdapter, publicOrigin } from './storage.mjs';
+import {
+  openDatabase,
+  databaseAdapter,
+  fileAdapter,
+  publicOrigin,
+} from './storage.mjs';
 import type { Platform, Query } from '../lib/platform-types';
 let database: ReturnType<typeof databaseAdapter> | undefined;
 export const platform: Platform = {
@@ -10,5 +15,7 @@ export const platform: Platform = {
     },
   },
   files: fileAdapter(),
-  get publicOrigin() { return publicOrigin(); },
+  get publicOrigin() {
+    return publicOrigin();
+  },
 };

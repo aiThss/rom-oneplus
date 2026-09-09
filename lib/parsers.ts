@@ -142,7 +142,9 @@ export function parseZipBrowser(
         continue;
       }
       files++;
-      const download = child.querySelector('a.zip-download')?.getAttribute('href');
+      const download = child
+        .querySelector('a.zip-download')
+        ?.getAttribute('href');
       result.push({
         kind: 'file',
         name,
@@ -160,7 +162,13 @@ export function parseZipBrowser(
   const title = zipText(document.querySelector('#zip-inline-title'));
   return {
     id,
-    name: title || id.replace(/^archive:/, '').split('/').at(-1) || 'ZIP',
+    name:
+      title ||
+      id
+        .replace(/^archive:/, '')
+        .split('/')
+        .at(-1) ||
+      'ZIP',
     summary: { files, folders, entries },
     entries: tree,
     sourceUrl,

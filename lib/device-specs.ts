@@ -25,7 +25,8 @@ export const deviceSpecs: DeviceSpec[] = [
     name: 'OnePlus 13',
     aliases: ['OnePlus 13', 'Oneplus 13', 'OP 13'],
     sourceUrl: 'https://www.gsmarena.com.ng/product/oneplus-13',
-    imageUrl: 'https://www.gsmarena.com.ng/uploads/products/OnePlus-13-Blue.webp',
+    imageUrl:
+      'https://www.gsmarena.com.ng/uploads/products/OnePlus-13-Blue.webp',
     imageAlt: 'OnePlus 13 với màn hình LTPO AMOLED',
     released: '11/2024',
     dimensions: '162,9 × 76,5 × 8,5 / 8,9 mm',

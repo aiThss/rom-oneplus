@@ -31,11 +31,12 @@ function currentSettings(value: Settings): Settings {
     (max, section) => Math.max(max, section.order),
     -1,
   );
-  const sections = defaultSettings.sections.map((fallback) =>
-    storedSections.find((section) => section.id === fallback.id) ||
-    (fallback.id === 'xiaomi' && !hasXiaomi
-      ? { ...fallback, order: lastOrder + 1 }
-      : fallback),
+  const sections = defaultSettings.sections.map(
+    (fallback) =>
+      storedSections.find((section) => section.id === fallback.id) ||
+      (fallback.id === 'xiaomi' && !hasXiaomi
+        ? { ...fallback, order: lastOrder + 1 }
+        : fallback),
   );
   return {
     ...defaultSettings,

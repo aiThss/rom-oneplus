@@ -72,7 +72,11 @@ assert.equal(
 const zip = await request('zip?id=' + encodeURIComponent(file.id));
 assert.equal(zip.res.status, 200);
 assert.ok(zip.data.summary.entries > 0);
-assert.ok(zip.data.entries.some((entry) => entry.kind === 'file' || entry.kind === 'folder'));
+assert.ok(
+  zip.data.entries.some(
+    (entry) => entry.kind === 'file' || entry.kind === 'folder',
+  ),
+);
 console.log('PASS real archive navigation, direct link and exact-file MD5');
 const ota = await request('ota');
 assert.ok(ota.data.data.length);
@@ -81,8 +85,8 @@ console.log('PASS real OTA metadata, no unresolved download links');
 const sf = await request('catalog?source=sourceforge&path=Oneplus%2013');
 assert.ok(sf.data.data.entries.length);
 console.log('PASS real SourceForge metadata');
-  const before = (await request('aiths/data')).data;
-  const adminOta = await request('aiths/catalog?source=ota');
+const before = (await request('aiths/data')).data;
+const adminOta = await request('aiths/catalog?source=ota');
 assert.equal(adminOta.res.status, 200);
 const release = adminOta.data.data.entries.find(
   (e) => e.id === ota.data.data[0].id,
@@ -94,7 +98,7 @@ const previous = before.overrides.find((e) => e.id === id);
 let customId;
 let logId;
 try {
-    await request('aiths/override', {
+  await request('aiths/override', {
     id: release.id,
     changelogVi: 'Bản dịch đúng mã phát hành',
   });
@@ -114,8 +118,8 @@ try {
     ).res.status,
     200,
   );
-    await request('aiths/sync', { source: 'archive', path: '' });
-    const changed = (await request('aiths/data')).data;
+  await request('aiths/sync', { source: 'archive', path: '' });
+  const changed = (await request('aiths/data')).data;
   assert.equal(
     changed.overrides.find((e) => e.id === id).description,
     'Kiểm tra giữ nội dung sau đồng bộ',
@@ -135,7 +139,7 @@ try {
   console.log(
     'PASS overrides survive real sync and hidden entries stay hidden',
   );
-    const custom = await request('aiths/custom', {
+  const custom = await request('aiths/custom', {
     name: 'Mục kiểm thử tự động',
     parent: '',
     device: 'Oneplus 13',
@@ -150,7 +154,7 @@ try {
   });
   assert.equal(custom.res.status, 200);
   customId = custom.data.id;
-    const log = await request('aiths/log', {
+  const log = await request('aiths/log', {
     date: '2026-09-06',
     title: 'Bản nháp kiểm thử',
     body: 'Không xuất bản',

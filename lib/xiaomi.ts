@@ -41,7 +41,9 @@ function string(value: unknown) {
   return typeof value === 'string' ? value.trim() : '';
 }
 function list(value: unknown) {
-  return Array.isArray(value) ? value.filter((v): v is string => !!string(v)).map(string) : [];
+  return Array.isArray(value)
+    ? value.filter((v): v is string => !!string(v)).map(string)
+    : [];
 }
 function name(value: unknown) {
   if (!value || typeof value !== 'object') return '';
@@ -78,7 +80,9 @@ function regionLabel(region: string) {
       jp: 'Nhật Bản',
       kr: 'Hàn Quốc',
       vn: 'Việt Nam',
-    }[region] || region || 'Không rõ khu vực'
+    }[region] ||
+    region ||
+    'Không rõ khu vực'
   );
 }
 function fileLabel(key: string) {
@@ -124,7 +128,8 @@ export function parseXiaomiIndex(html: string): Catalog {
       description: `Mã máy ${code} · mở danh sách ROM HyperOS`,
     });
   });
-  if (!entries.length) throw new Error('Danh sách thiết bị Xiaomi trả về rỗng.');
+  if (!entries.length)
+    throw new Error('Danh sách thiết bị Xiaomi trả về rỗng.');
   entries.sort((a, b) => a.name.localeCompare(b.name, 'vi', { numeric: true }));
   return {
     source: 'xiaomi',
@@ -164,34 +169,35 @@ export function parseXiaomiDevice(value: XiaomiDevice, path: string): Catalog {
   if (!validCode(code) || string(value.device) !== code)
     throw new Error('Mã thiết bị Xiaomi không hợp lệ.');
   const branches = Array.isArray(value.branches)
-    ? value.branches.filter((v): v is XiaomiBranch => !!v && typeof v === 'object')
+    ? value.branches.filter(
+        (v): v is XiaomiBranch => !!v && typeof v === 'object',
+      )
     : [];
   const deviceName = name(value.name) || code;
   const preview = devicePreview(value, code, branches.length);
   const url = xiaomiDeviceUrl(code);
   const index = branchIndex(path);
   if (path === code) {
-    const entries = branches
-      .map((branch, i) => {
-        const branchName = name(branch.name) || `Nhánh ROM ${i + 1}`;
-        const region = string(branch.region);
-        const roms =
-          branch.roms && typeof branch.roms === 'object'
-            ? Object.keys(branch.roms).length
-            : 0;
-        return {
-          id: `xiaomi:${branchPath(code, i)}`,
-          source: 'xiaomi',
-          kind: 'folder',
-          name: branchName,
-          path: branchPath(code, i),
-          parent: code,
-          device: deviceName,
-          region: regionLabel(region),
-          sourceUrl: url,
-          description: `${regionLabel(region)} · ${roms} phiên bản`,
-        } satisfies Entry;
-      });
+    const entries = branches.map((branch, i) => {
+      const branchName = name(branch.name) || `Nhánh ROM ${i + 1}`;
+      const region = string(branch.region);
+      const roms =
+        branch.roms && typeof branch.roms === 'object'
+          ? Object.keys(branch.roms).length
+          : 0;
+      return {
+        id: `xiaomi:${branchPath(code, i)}`,
+        source: 'xiaomi',
+        kind: 'folder',
+        name: branchName,
+        path: branchPath(code, i),
+        parent: code,
+        device: deviceName,
+        region: regionLabel(region),
+        sourceUrl: url,
+        description: `${regionLabel(region)} · ${roms} phiên bản`,
+      } satisfies Entry;
+    });
     return {
       source: 'xiaomi',
       path,
@@ -218,7 +224,8 @@ export function parseXiaomiDevice(value: XiaomiDevice, path: string): Catalog {
       if (!/^[A-Za-z0-9._-]{1,160}$/.test(version)) return;
       Object.entries(rom).forEach(([key, raw]) => {
         const filename = string(raw);
-        if (!filename || !/^[^/\\]{1,500}\.(?:zip|tgz)$/i.test(filename)) return;
+        if (!filename || !/^[^/\\]{1,500}\.(?:zip|tgz)$/i.test(filename))
+          return;
         const filePath = normalizedPath(`${path}/${version}/${key}`);
         const release = string(rom.release);
         const published = release ? Date.parse(`${release}T00:00:00Z`) : NaN;

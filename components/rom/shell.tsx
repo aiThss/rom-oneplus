@@ -17,6 +17,7 @@ import {
   ArrowUpRight,
   Menu,
   Smartphone,
+  Terminal,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -36,8 +37,14 @@ export const navigation = [
     icon: SmartphoneIcon,
     hidden: true,
   },
-  { id: 'recovery', label: 'Recovery / OFOX', icon: ShieldCheck, hidden: false },
+  {
+    id: 'recovery',
+    label: 'Recovery / OFOX',
+    icon: ShieldCheck,
+    hidden: false,
+  },
   { id: 'ota', label: 'Firmware OTA', icon: Layers3, hidden: false },
+  { id: 'root-guide', label: 'Root Guide', icon: Terminal, hidden: false },
   { id: 'mirrors', label: 'SourceForge', icon: Globe, hidden: false },
   { id: 'stats', label: 'Máy chủ tải', icon: Activity, hidden: false },
   { id: 'changelog', label: 'Changelog', icon: History, hidden: false },
@@ -158,10 +165,7 @@ export function Shell({
       <div className="main-wrap">
         <header className="topbar">
           <div className="topbar-start">
-            <SidebarTrigger
-              className="mobile-menu"
-              aria-label="Mở điều hướng"
-            >
+            <SidebarTrigger className="mobile-menu" aria-label="Mở điều hướng">
               <Menu size={20} />
             </SidebarTrigger>
             <span className="topbar-label">

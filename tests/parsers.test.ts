@@ -254,8 +254,21 @@ void test('Xiaomi catalog reads HyperOS device data and builds official download
     'nuwa/branch-0',
   );
   assert.equal(device.preview?.name, 'Xiaomi 13 Pro');
-  assert.equal(device.preview?.imageUrl, 'https://data.hyperos.fans/assets/images/nuwa.png');
+  assert.equal(
+    device.preview?.imageUrl,
+    'https://data.hyperos.fans/assets/images/nuwa.png',
+  );
   assert.equal(device.entries.length, 2);
-  assert.ok(device.entries[0].downloadUrl?.startsWith('https://bigota.d.miui.com/'));
+  assert.ok(
+    device.entries[0].downloadUrl?.startsWith('https://bigota.d.miui.com/'),
+  );
   assert.ok(device.entries.every((entry) => entry.source === 'xiaomi'));
+});
+void test('Root Guide section is registered in default settings and configurable', () => {
+  const rootSec = defaultSettings.sections.find((s) => s.id === 'root-guide');
+  assert.ok(rootSec, 'root-guide section must exist in defaultSettings');
+  assert.equal(rootSec.enabled, true);
+
+  const validated = validateSettings(defaultSettings);
+  assert.ok(validated.sections.some((s) => s.id === 'root-guide'));
 });
