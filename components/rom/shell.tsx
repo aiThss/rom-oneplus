@@ -156,7 +156,7 @@ export function Shell({
         } as React.CSSProperties
       }
       className="rom-app"
-      >
+    >
       <Sidebar variant="inset" className="rom-sidebar">
         <SidebarHeader className="brand-header">
           <a href="/" className="brand">
@@ -168,7 +168,9 @@ export function Shell({
           </a>
         </SidebarHeader>
         <SidebarContent className="nav-content">
-          <div className="nav-label">{language === 'en' ? 'Library' : 'Thư viện'}</div>
+          <div className="nav-label">
+            {language === 'en' ? 'Library' : 'Thư viện'}
+          </div>
           <nav>
             {links.map(
               (n) =>
@@ -257,9 +259,7 @@ export function Shell({
             <Button
               variant="ghost"
               size="icon"
-              aria-label={
-                dark ? labels.light : labels.dark
-              }
+              aria-label={dark ? labels.light : labels.dark}
               onClick={() => {
                 localStorage.setItem('rom-theme', dark ? 'light' : 'dark');
                 setDark(!dark);

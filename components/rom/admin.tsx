@@ -119,11 +119,18 @@ function Login({
           <span className="login-icon">
             <LockKeyhole size={28} />
           </span>
-          <div className="eyebrow">{en ? 'ADMIN WORKSPACE' : 'KHÔNG GIAN QUẢN TRỊ'}</div>
+          <div className="eyebrow">
+            {en ? 'ADMIN WORKSPACE' : 'KHÔNG GIAN QUẢN TRỊ'}
+          </div>
           <h1>
-            {en ? 'Welcome back' : 'Chào mừng trở lại'}<span>.</span>
+            {en ? 'Welcome back' : 'Chào mừng trở lại'}
+            <span>.</span>
           </h1>
-          <p>{en ? 'Sign in to manage your library.' : 'Đăng nhập để quản lý thư viện của bạn.'}</p>
+          <p>
+            {en
+              ? 'Sign in to manage your library.'
+              : 'Đăng nhập để quản lý thư viện của bạn.'}
+          </p>
           <form
             onSubmit={async (e) => {
               e.preventDefault();
@@ -164,7 +171,9 @@ function Login({
             )}
             {!initialized && (
               <p className="field-error">
-                {en ? 'The admin account has not been configured on the server.' : 'Chưa thiết lập tài khoản quản trị trên máy chủ.'}
+                {en
+                  ? 'The admin account has not been configured on the server.'
+                  : 'Chưa thiết lập tài khoản quản trị trên máy chủ.'}
               </p>
             )}
             <Button
@@ -172,7 +181,13 @@ function Login({
               className="action login-submit"
               disabled={busy || !initialized}
             >
-              {busy ? (en ? 'Signing in…' : 'Đang đăng nhập…') : (en ? 'Sign in' : 'Đăng nhập')}
+              {busy
+                ? en
+                  ? 'Signing in…'
+                  : 'Đang đăng nhập…'
+                : en
+                  ? 'Sign in'
+                  : 'Đăng nhập'}
               <ArrowUpRight size={16} />
             </Button>
           </form>
@@ -253,11 +268,18 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
     <Shell admin {...(state.data?.settings || defaultSettings)} donate={false}>
       <div className="page-heading admin-heading">
         <div>
-          <div className="eyebrow">{en ? 'ADMIN WORKSPACE' : 'KHÔNG GIAN QUẢN TRỊ'}</div>
+          <div className="eyebrow">
+            {en ? 'ADMIN WORKSPACE' : 'KHÔNG GIAN QUẢN TRỊ'}
+          </div>
           <h1>
-            {en ? 'Your library' : 'Thư viện của bạn'}<span>.</span>
+            {en ? 'Your library' : 'Thư viện của bạn'}
+            <span>.</span>
           </h1>
-          <p>{en ? 'Content, branding, and data connections.' : 'Nội dung, nhận diện và kết nối dữ liệu.'}</p>
+          <p>
+            {en
+              ? 'Content, branding, and data connections.'
+              : 'Nội dung, nhận diện và kết nối dữ liệu.'}
+          </p>
         </div>
         <div className="action-row">
           <a className="action secondary-action" href="/" target="_blank">
@@ -290,11 +312,21 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
             </div>
             <Tabs defaultValue="settings" className="admin-tabs">
               <TabsList className="admin-tabs-list">
-                <TabsTrigger value="settings">{en ? 'Branding' : 'Nhận diện'}</TabsTrigger>
-                <TabsTrigger value="catalog">{en ? 'Source catalog' : 'Danh mục nguồn'}</TabsTrigger>
-                <TabsTrigger value="custom">{en ? 'Custom links' : 'Liên kết riêng'}</TabsTrigger>
-                <TabsTrigger value="journal">{en ? 'Web changelog' : 'Changelog web'}</TabsTrigger>
-                <TabsTrigger value="sync">{en ? 'Sync' : 'Đồng bộ'}</TabsTrigger>
+                <TabsTrigger value="settings">
+                  {en ? 'Branding' : 'Nhận diện'}
+                </TabsTrigger>
+                <TabsTrigger value="catalog">
+                  {en ? 'Source catalog' : 'Danh mục nguồn'}
+                </TabsTrigger>
+                <TabsTrigger value="custom">
+                  {en ? 'Custom links' : 'Liên kết riêng'}
+                </TabsTrigger>
+                <TabsTrigger value="journal">
+                  {en ? 'Web changelog' : 'Changelog web'}
+                </TabsTrigger>
+                <TabsTrigger value="sync">
+                  {en ? 'Sync' : 'Đồng bộ'}
+                </TabsTrigger>
               </TabsList>
               <TabsContent value="settings">
                 <form
@@ -347,14 +379,20 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                         style={{ borderColor: draft.accent }}
                       >
                         {draft.logo ? (
-                          <img src={draft.logo} alt={en ? 'Logo preview' : 'Logo xem trước'} />
+                          <img
+                            src={draft.logo}
+                            alt={en ? 'Logo preview' : 'Logo xem trước'}
+                          />
                         ) : (
                           <span style={{ background: draft.accent }}>
                             <HardDrive size={25} />
                           </span>
                         )}
                         <div>
-                          <h3>{draft.name || (en ? 'Website name' : 'Tên website')}</h3>
+                          <h3>
+                            {draft.name ||
+                              (en ? 'Website name' : 'Tên website')}
+                          </h3>
                           <p>ROM, firmware & recovery</p>
                         </div>
                       </div>
@@ -365,7 +403,9 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                         <h2>{en ? 'Navigation' : 'Điều hướng'}</h2>
                       </div>
                       <p className="panel-caption">
-                        {en ? 'Enable, disable, and reorder website sections.' : 'Bật, tắt và sắp xếp các mục trên website.'}
+                        {en
+                          ? 'Enable, disable, and reorder website sections.'
+                          : 'Bật, tắt và sắp xếp các mục trên website.'}
                       </p>
                       {draft.sections
                         .sort((a, b) => a.order - b.order)
@@ -374,9 +414,19 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                             <Toggle
                               label={
                                 (en
-                                  ? ({ archive: 'Library', recovery: 'Recovery / OFOX', ota: 'Firmware OTA', 'root-guide': 'Root Guide', mirrors: 'SourceForge', stats: 'Download Server', changelog: 'Changelog' } as Record<string, string>)[s.id]
-                                  : navigation.find((n) => n.id === s.id)?.label) ||
-                                s.id
+                                  ? (
+                                      {
+                                        archive: 'Library',
+                                        recovery: 'Recovery / OFOX',
+                                        ota: 'Firmware OTA',
+                                        'root-guide': 'Root Guide',
+                                        mirrors: 'SourceForge',
+                                        stats: 'Download Server',
+                                        changelog: 'Changelog',
+                                      } as Record<string, string>
+                                    )[s.id]
+                                  : navigation.find((n) => n.id === s.id)
+                                      ?.label) || s.id
                               }
                               checked={s.enabled}
                               onChange={(enabled) =>
@@ -412,7 +462,9 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                               type="button"
                               variant="ghost"
                               size="icon"
-                              aria-label={(en ? 'Move down ' : 'Đưa xuống ') + s.id}
+                              aria-label={
+                                (en ? 'Move down ' : 'Đưa xuống ') + s.id
+                              }
                               disabled={i === draft.sections.length - 1}
                               onClick={() => {
                                 const arr = [...draft.sections];
@@ -469,7 +521,9 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                     <div className="panel admin-panel">
                       <h2>{en ? 'Community groups' : 'Nhóm cộng đồng'}</h2>
                       <p className="panel-caption">
-                        {en ? 'Leave the list empty to hide the community section.' : 'Để danh sách trống để ẩn phần cộng đồng.'}
+                        {en
+                          ? 'Leave the list empty to hide the community section.'
+                          : 'Để danh sách trống để ẩn phần cộng đồng.'}
                       </p>
                       <LinksEditor
                         value={draft.groups}
@@ -480,7 +534,9 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                   <div className="panel admin-panel">
                     <h2>{en ? 'Support information' : 'Thông tin ủng hộ'}</h2>
                     <Toggle
-                      label={en ? 'Show support section' : 'Hiển thị mục ủng hộ'}
+                      label={
+                        en ? 'Show support section' : 'Hiển thị mục ủng hộ'
+                      }
                       checked={draft.donate.enabled}
                       onChange={(enabled) =>
                         setDraft({
@@ -511,9 +567,13 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                             <Field
                               key={key}
                               label={
-                                (en ? ['Bank', 'Account holder', 'Account number'] : ['Ngân hàng', 'Chủ tài khoản', 'Số tài khoản'])[
-                                  i
-                                ]
+                                (en
+                                  ? ['Bank', 'Account holder', 'Account number']
+                                  : [
+                                      'Ngân hàng',
+                                      'Chủ tài khoản',
+                                      'Số tài khoản',
+                                    ])[i]
                               }
                             >
                               <Input
@@ -543,7 +603,13 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                             })
                           }
                         />
-                        <Field label={en ? 'Support link (optional)' : 'Liên kết ủng hộ (tùy chọn)'}>
+                        <Field
+                          label={
+                            en
+                              ? 'Support link (optional)'
+                              : 'Liên kết ủng hộ (tùy chọn)'
+                          }
+                        >
                           <Input
                             type="url"
                             value={draft.donate.url}
@@ -563,7 +629,11 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                     </div>
                   </div>
                   <div className="save-bar">
-                    <span>{en ? 'Changes appear after saving.' : 'Thay đổi chỉ xuất hiện sau khi lưu.'}</span>
+                    <span>
+                      {en
+                        ? 'Changes appear after saving.'
+                        : 'Thay đổi chỉ xuất hiện sau khi lưu.'}
+                    </span>
                     <div className="action-row">
                       <Button
                         type="button"
@@ -576,7 +646,13 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                       </Button>
                       <Button type="submit" className="action" disabled={busy}>
                         <Save size={16} />
-                        {busy ? (en ? 'Saving…' : 'Đang lưu…') : (en ? 'Save settings' : 'Lưu cấu hình')}
+                        {busy
+                          ? en
+                            ? 'Saving…'
+                            : 'Đang lưu…'
+                          : en
+                            ? 'Save settings'
+                            : 'Lưu cấu hình'}
                       </Button>
                     </div>
                   </div>
@@ -610,9 +686,13 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
             <Dialog open={preview} onOpenChange={setPreview}>
               <DialogContent className="preview-dialog">
                 <DialogHeader>
-                  <DialogTitle>{en ? 'Settings preview' : 'Xem trước cấu hình'}</DialogTitle>
+                  <DialogTitle>
+                    {en ? 'Settings preview' : 'Xem trước cấu hình'}
+                  </DialogTitle>
                   <DialogDescription>
-                    {en ? 'Unsaved information from this editing session.' : 'Thông tin chưa lưu trong phiên chỉnh sửa này.'}
+                    {en
+                      ? 'Unsaved information from this editing session.'
+                      : 'Thông tin chưa lưu trong phiên chỉnh sửa này.'}
                   </DialogDescription>
                 </DialogHeader>
                 <div
@@ -635,7 +715,11 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                         </span>
                       ))}
                   </div>
-                  <p>{en ? 'Brands: ' : 'Hãng: '}{draft.brands.join(', ') || (en ? 'None selected' : 'Chưa chọn')}</p>
+                  <p>
+                    {en ? 'Brands: ' : 'Hãng: '}
+                    {draft.brands.join(', ') ||
+                      (en ? 'None selected' : 'Chưa chọn')}
+                  </p>
                   {draft.groups.map((g, i) => (
                     <p key={i}>
                       {g.name} · {g.url}

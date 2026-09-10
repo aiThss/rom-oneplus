@@ -18,12 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Markdown } from './markdown';
 import { regionLabel, useLanguage } from '@/lib/language';
-import {
-  api,
-  useRemote,
-  SelectField,
-  SearchPicker,
-} from './common';
+import { api, useRemote, SelectField, SearchPicker } from './common';
 import {
   type Cached,
   type Entry,
@@ -146,7 +141,11 @@ export function RootGuideView() {
       .then((data) => {
         if (cancelled) return;
         const variants = (data.variants || []).filter(isSupportedRootVariant);
-        setCapability({ ...data, variants, available: data.available && variants.length > 0 });
+        setCapability({
+          ...data,
+          variants,
+          available: data.available && variants.length > 0,
+        });
         if (variants.length) {
           setSelectedFlavor(variants[0].id);
           const partition = data.partition || 'init_boot';
@@ -161,7 +160,12 @@ export function RootGuideView() {
       })
       .catch((err) => {
         if (cancelled) return;
-        setCapError(err.message || (en ? 'Could not check the patchable partition from the source.' : 'Chưa kiểm tra được phân vùng vá từ nguồn.'));
+        setCapError(
+          err.message ||
+            (en
+              ? 'Could not check the patchable partition from the source.'
+              : 'Chưa kiểm tra được phân vùng vá từ nguồn.'),
+        );
         setCapability(null);
       })
       .finally(() => {
@@ -171,7 +175,14 @@ export function RootGuideView() {
     return () => {
       cancelled = true;
     };
-  }, [en, device, region, activeEntry?.id, activeEntry?.version, matchingVersions]);
+  }, [
+    en,
+    device,
+    region,
+    activeEntry?.id,
+    activeEntry?.version,
+    matchingVersions,
+  ]);
 
   // Handle patch flavour change
   const handleFlavorChange = (flavorId: string) => {
@@ -196,7 +207,9 @@ export function RootGuideView() {
     setIsPatching(true);
     setPatchStatus({
       state: 'queued',
-      message: en ? 'Sending the patch request to the source server...' : 'Đang gửi yêu cầu vá tới máy chủ nguồn...',
+      message: en
+        ? 'Sending the patch request to the source server...'
+        : 'Đang gửi yêu cầu vá tới máy chủ nguồn...',
     });
 
     try {
@@ -248,7 +261,9 @@ export function RootGuideView() {
         message:
           err instanceof Error
             ? err.message
-            : en ? 'Failed to start the patch job.' : 'Lỗi trong quá trình khởi tạo tác vụ vá.',
+            : en
+              ? 'Failed to start the patch job.'
+              : 'Lỗi trong quá trình khởi tạo tác vụ vá.',
       });
       setIsPatching(false);
     }
@@ -340,12 +355,14 @@ export function RootGuideView() {
               : 'Root Guide · Vá Boot Image & Lệnh Fastboot 4 Bước'}
           </h1>
           <p>
-            {en
-              ? 'Patch '
-              : 'Vá trực tiếp file '}
+            {en ? 'Patch ' : 'Vá trực tiếp file '}
             <code>init_boot.img</code> ({en ? 'or ' : 'hoặc '}
-            <code>boot.img</code>) {en ? 'from the OTA source using ' : 'từ OTA nguồn bằng '}
-            KernelSU / SukiSU {en ? 'and get matching Fastboot commands.' : 'và nhận bộ câu lệnh Fastboot tương ứng.'}
+            <code>boot.img</code>){' '}
+            {en ? 'from the OTA source using ' : 'từ OTA nguồn bằng '}
+            KernelSU / SukiSU{' '}
+            {en
+              ? 'and get matching Fastboot commands.'
+              : 'và nhận bộ câu lệnh Fastboot tương ứng.'}
           </p>
         </div>
         <span className="subtle-pill">
@@ -357,7 +374,9 @@ export function RootGuideView() {
       <section className="panel guide-step-card safety-guide-card">
         <div className="step-header">
           <span className="step-badge">{en ? 'Safety' : 'Lưu ý'}</span>
-          <h2>{en ? 'Process & Safety Warnings' : 'Quy trình & Cảnh báo an toàn'}</h2>
+          <h2>
+            {en ? 'Process & Safety Warnings' : 'Quy trình & Cảnh báo an toàn'}
+          </h2>
         </div>
 
         <div className="guide-steps-list">
@@ -369,9 +388,14 @@ export function RootGuideView() {
                 {en
                   ? 'Required before flashing. Open Settings → Developer options → enable '
                   : 'Bắt buộc trước khi flash. Vào Cài đặt → Tùy chọn nhà phát triển → Bật '}
-                <em>{en ? 'OEM unlocking' : 'Mở khóa OEM'}</em> {en ? 'and ' : 'và '}
-                <em>{en ? 'USB debugging' : 'Gỡ lỗi USB'}</em>. {en ? 'Run ' : 'Chạy '}
-                <code>fastboot flashing unlock</code> {en ? '(this erases all device data).' : '(Thao tác này sẽ xóa sạch dữ liệu máy).'}
+                <em>{en ? 'OEM unlocking' : 'Mở khóa OEM'}</em>{' '}
+                {en ? 'and ' : 'và '}
+                <em>{en ? 'USB debugging' : 'Gỡ lỗi USB'}</em>.{' '}
+                {en ? 'Run ' : 'Chạy '}
+                <code>fastboot flashing unlock</code>{' '}
+                {en
+                  ? '(this erases all device data).'
+                  : '(Thao tác này sẽ xóa sạch dữ liệu máy).'}
               </p>
             </div>
           </div>
@@ -393,11 +417,15 @@ export function RootGuideView() {
           <div className="guide-bullet">
             <span className="bullet-num">3</span>
             <div>
-                <strong>{en ? 'OnePlus / Chinese device note' : 'Lưu ý cho OnePlus / Máy nội địa Trung Quốc'}</strong>
+              <strong>
+                {en
+                  ? 'OnePlus / Chinese device note'
+                  : 'Lưu ý cho OnePlus / Máy nội địa Trung Quốc'}
+              </strong>
               <p>
-                  {en
-                    ? 'For a China-region OnePlus converted to OxygenOS, never relock the bootloader until standard Fastboot access has been restored.'
-                    : 'Nếu bạn sở hữu máy OnePlus nội địa chuyển sang OxygenOS, tuyệt đối không khóa lại bootloader nếu chưa khôi phục quyền truy cập Fastboot tiêu chuẩn.'}
+                {en
+                  ? 'For a China-region OnePlus converted to OxygenOS, never relock the bootloader until standard Fastboot access has been restored.'
+                  : 'Nếu bạn sở hữu máy OnePlus nội địa chuyển sang OxygenOS, tuyệt đối không khóa lại bootloader nếu chưa khôi phục quyền truy cập Fastboot tiêu chuẩn.'}
               </p>
             </div>
           </div>
@@ -409,7 +437,11 @@ export function RootGuideView() {
         <section className="panel guide-step-card">
           <div className="step-header">
             <span className="step-badge">{en ? 'Step 1' : 'Bước 1'}</span>
-            <h2>{en ? 'Choose Device & Firmware Version' : 'Chọn thiết bị & Phiên bản Firmware'}</h2>
+            <h2>
+              {en
+                ? 'Choose Device & Firmware Version'
+                : 'Chọn thiết bị & Phiên bản Firmware'}
+            </h2>
           </div>
           <p className="step-desc">
             {en
@@ -435,7 +467,10 @@ export function RootGuideView() {
                 setRegion(r);
                 setVersionQuery('');
               }}
-                options={regions.map((r) => ({ value: r, label: regionLabel(r, language) }))}
+              options={regions.map((r) => ({
+                value: r,
+                label: regionLabel(r, language),
+              }))}
             />
 
             <SelectField
@@ -453,7 +488,7 @@ export function RootGuideView() {
             <div className="current-ota-meta">
               <span>{en ? 'Selected:' : 'Đang chọn:'}</span>
               <strong>{activeEntry.device}</strong> ·{' '}
-                <span>{regionLabel(activeEntry.region, language)}</span> ·{' '}
+              <span>{regionLabel(activeEntry.region, language)}</span> ·{' '}
               <code>{activeEntry.version}</code>
               {activeEntry.checksum && (
                 <small className="ota-meta-checksum">
@@ -468,13 +503,19 @@ export function RootGuideView() {
         <section className="panel guide-step-card">
           <div className="step-header">
             <span className="step-badge">{en ? 'Step 2' : 'Bước 2'}</span>
-            <h2>{en ? 'Patch & Download Boot Image' : 'Vá & Tải Boot Image'}</h2>
+            <h2>
+              {en ? 'Patch & Download Boot Image' : 'Vá & Tải Boot Image'}
+            </h2>
           </div>
 
           {capLoading ? (
             <div className="cap-loading-state">
               <RefreshCw className="animate-spin" size={20} />
-              <p>{en ? 'Checking patch capability from the source server...' : 'Đang kiểm tra khả năng vá từ máy chủ nguồn...'}</p>
+              <p>
+                {en
+                  ? 'Checking patch capability from the source server...'
+                  : 'Đang kiểm tra khả năng vá từ máy chủ nguồn...'}
+              </p>
             </div>
           ) : capError ? (
             <div className="notice arb-notice">
@@ -510,7 +551,11 @@ export function RootGuideView() {
                   <ShieldAlert size={20} className="arb-icon" />
                   <div>
                     <p>
-                      <strong>{en ? 'Anti-Rollback Warning (ARB: 1)' : 'Cảnh báo Anti-Rollback (ARB: 1)'}</strong>
+                      <strong>
+                        {en
+                          ? 'Anti-Rollback Warning (ARB: 1)'
+                          : 'Cảnh báo Anti-Rollback (ARB: 1)'}
+                      </strong>
                     </p>
                     <p className="arb-warning-sub">
                       Bản cập nhật này có cơ chế khóa hạ cấp. Không hạ cấp xuống
@@ -560,7 +605,8 @@ export function RootGuideView() {
                   ) : (
                     <>
                       <Download size={16} />
-                      {en ? 'Patch & Download' : 'Vá & Tải file'} ({selectedFlavor.toUpperCase()})
+                      {en ? 'Patch & Download' : 'Vá & Tải file'} (
+                      {selectedFlavor.toUpperCase()})
                     </>
                   )}
                 </Button>
@@ -569,19 +615,24 @@ export function RootGuideView() {
                   <div className={`patch-status-box ${patchStatus.state}`}>
                     <div className="status-text">
                       <strong>
-                        {patchStatus.state === 'queued' &&
-                          en ? 'Queued on the source server...' : 'Đang xếp hàng trên máy chủ...'}
-                        {patchStatus.state === 'running' &&
-                          en ? 'The server is extracting and patching the partition...' : 'Máy chủ đang trích xuất và vá phân vùng...'}
-                        {patchStatus.state === 'ready' &&
-                          en ? 'Patched successfully! Download started.' : 'Đã vá thành công! File đang tải về.'}
-                        {patchStatus.state === 'failed' && (en ? 'Failed' : 'Thất bại')}
+                        {patchStatus.state === 'queued' && en
+                          ? 'Queued on the source server...'
+                          : 'Đang xếp hàng trên máy chủ...'}
+                        {patchStatus.state === 'running' && en
+                          ? 'The server is extracting and patching the partition...'
+                          : 'Máy chủ đang trích xuất và vá phân vùng...'}
+                        {patchStatus.state === 'ready' && en
+                          ? 'Patched successfully! Download started.'
+                          : 'Đã vá thành công! File đang tải về.'}
+                        {patchStatus.state === 'failed' &&
+                          (en ? 'Failed' : 'Thất bại')}
                       </strong>
                       <p>{patchStatus.message}</p>
                       {patchStatus.wait_seconds !== undefined &&
                         patchStatus.wait_seconds > 0 && (
                           <small>
-                            {en ? 'Wait time: ' : 'Thời gian chờ: '}{patchStatus.wait_seconds}s
+                            {en ? 'Wait time: ' : 'Thời gian chờ: '}
+                            {patchStatus.wait_seconds}s
                           </small>
                         )}
                     </div>
@@ -606,7 +657,9 @@ export function RootGuideView() {
         <section className="panel guide-step-card wide-card">
           <div className="step-header">
             <span className="step-badge">{en ? 'Step 3' : 'Bước 3'}</span>
-            <h2>{en ? 'Fastboot Flash Commands' : 'Câu lệnh Fastboot Flash'}</h2>
+            <h2>
+              {en ? 'Fastboot Flash Commands' : 'Câu lệnh Fastboot Flash'}
+            </h2>
             <div className="card-header-actions">
               <label className="toggle-slot-label">
                 <input
@@ -614,14 +667,20 @@ export function RootGuideView() {
                   checked={useBothSlots}
                   onChange={(e) => setUseBothSlots(e.target.checked)}
                 />
-                  <span>{en ? 'Flash both slots (A/B)' : 'Flash cả 2 Slot (A/B)'}</span>
+                <span>
+                  {en ? 'Flash both slots (A/B)' : 'Flash cả 2 Slot (A/B)'}
+                </span>
               </label>
             </div>
           </div>
 
           <div className="filename-input-row">
             <label htmlFor="fastboot-filename">
-              <span>{en ? 'Downloaded filename (in the working folder):' : 'Tên file đã tải (trong thư mục làm việc):'}</span>
+              <span>
+                {en
+                  ? 'Downloaded filename (in the working folder):'
+                  : 'Tên file đã tải (trong thư mục làm việc):'}
+              </span>
             </label>
             <Input
               id="fastboot-filename"
@@ -654,7 +713,11 @@ export function RootGuideView() {
         <section className="panel guide-step-card wide-card">
           <div className="step-header">
             <span className="step-badge">{en ? 'Step 4' : 'Bước 4'}</span>
-            <h2>{en ? 'Root Tools & Manager Apps' : 'Công cụ & Ứng dụng Quản lý Root'}</h2>
+            <h2>
+              {en
+                ? 'Root Tools & Manager Apps'
+                : 'Công cụ & Ứng dụng Quản lý Root'}
+            </h2>
           </div>
           <p className="step-desc">
             {en
@@ -728,7 +791,6 @@ export function RootGuideView() {
             </a>
           </div>
         </section>
-
       </div>
     </div>
   );

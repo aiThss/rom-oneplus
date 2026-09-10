@@ -113,7 +113,11 @@ export function CopyButton({
         }}
       >
         {done ? <Check size={15} /> : <Copy size={15} />}{' '}
-        {done ? (en ? 'Copied' : 'Đã sao chép') : label || (en ? 'Copy' : 'Sao chép')}
+        {done
+          ? en
+            ? 'Copied'
+            : 'Đã sao chép'
+          : label || (en ? 'Copy' : 'Sao chép')}
       </Button>
       {error && (
         <output className="field-error">
@@ -158,7 +162,9 @@ export function EmptyState({
   const resolvedTitle = title || (en ? 'No data available' : 'Chưa có dữ liệu');
   const resolvedDescription =
     description ||
-    (en ? 'Try another category or come back later.' : 'Thử chọn danh mục khác hoặc quay lại sau.');
+    (en
+      ? 'Try another category or come back later.'
+      : 'Thử chọn danh mục khác hoặc quay lại sau.');
   return (
     <Empty className="panel empty-state">
       <EmptyHeader>
@@ -197,7 +203,9 @@ export function ErrorState({
     <div role="alert" className="notice error">
       <AlertCircle size={19} />
       <div className="grow">
-        <strong>{en ? 'Could not connect to data' : 'Chưa kết nối được dữ liệu'}</strong>
+        <strong>
+          {en ? 'Could not connect to data' : 'Chưa kết nối được dữ liệu'}
+        </strong>
         <p>{error}</p>
       </div>
       {retry && (
@@ -268,7 +276,9 @@ export function SearchPicker({
           className="w-full min-w-0"
         />
         <ComboboxContent>
-          <ComboboxEmpty>{en ? 'No devices found.' : 'Không tìm thấy thiết bị.'}</ComboboxEmpty>
+          <ComboboxEmpty>
+            {en ? 'No devices found.' : 'Không tìm thấy thiết bị.'}
+          </ComboboxEmpty>
           <ComboboxList>
             {(item: string) => (
               <ComboboxItem
