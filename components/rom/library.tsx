@@ -24,6 +24,10 @@ import {
   Send,
   Check,
   TriangleAlert,
+  Loader2,
+  RotateCw,
+  Terminal,
+  Sparkles,
 } from 'lucide-react';
 import { Shell } from './shell';
 import { RootGuideView } from './root-guide';
@@ -105,10 +109,16 @@ function isArb(text?: string | null): boolean {
   return /\barb\b|anti-rollback/i.test(text);
 }
 
-function localizedEntryDescription(description: string | undefined, en: boolean) {
+function localizedEntryDescription(
+  description: string | undefined,
+  en: boolean,
+) {
   if (!description || !en) return description;
   return description
-    .replace(/^Mã máy\s+(.+?)\s*·\s*mở danh sách ROM HyperOS$/i, 'Device code $1 · open HyperOS ROM list')
+    .replace(
+      /^Mã máy\s+(.+?)\s*·\s*mở danh sách ROM HyperOS$/i,
+      'Device code $1 · open HyperOS ROM list',
+    )
     .replace(/^Mã máy:\s*/i, 'Device code: ')
     .replace(/mở danh sách ROM HyperOS/gi, 'open HyperOS ROM list');
 }
@@ -116,8 +126,11 @@ export function Library() {
   const [loc, setLoc] = useState({ view: 'archive', path: '', brand: '' });
   const { language } = useLanguage();
   const en = language === 'en';
-  const { data: settings, error: configError, loading: configLoading } =
-    useRemote<Settings>('/api/settings');
+  const {
+    data: settings,
+    error: configError,
+    loading: configLoading,
+  } = useRemote<Settings>('/api/settings');
   const config = settings || defaultSettings;
   useEffect(() => {
     setLoc(locationState());
@@ -143,7 +156,11 @@ export function Library() {
         {!visible ? (
           <EmptyState
             title={en ? 'Category hidden' : 'Danh mục đang ẩn'}
-            description={en ? 'The administrator has disabled this category.' : 'Quản trị viên đã tắt mục này.'}
+            description={
+              en
+                ? 'The administrator has disabled this category.'
+                : 'Quản trị viên đã tắt mục này.'
+            }
           />
         ) : activeView === 'ota' ? (
           <OtaView />
@@ -202,13 +219,26 @@ function Freshness({ value }: { value: Cached<unknown> }) {
     <div className={`freshness ${value.stale ? 'stale' : ''}`}>
       <span>
         <Clock size={13} />
-        {value.stale ? (en ? 'Cached data' : 'Dữ liệu đã lưu') : (en ? 'Synced' : 'Đồng bộ')} ·{' '}
-        {timeLabel(value.updatedAt)}
+        {value.stale
+          ? en
+            ? 'Cached data'
+            : 'Dữ liệu đã lưu'
+          : en
+            ? 'Synced'
+            : 'Đồng bộ'}{' '}
+        · {timeLabel(value.updatedAt)}
       </span>
       <a href={value.sourceUrl} target="_blank" rel="noreferrer">
         {en ? 'Open source' : 'Mở nguồn'} <ArrowUpRight size={13} />
       </a>
-      {value.error && <p>{value.error} {en ? 'Showing the latest available copy.' : 'Đang hiển thị bản gần nhất.'}</p>}
+      {value.error && (
+        <p>
+          {value.error}{' '}
+          {en
+            ? 'Showing the latest available copy.'
+            : 'Đang hiển thị bản gần nhất.'}
+        </p>
+      )}
     </div>
   );
 }
@@ -246,7 +276,9 @@ function DevicePreviewCompact({
         <img src={value.imageUrl} alt={value.imageAlt} />
       </div>
       <div className="device-preview-compact-copy">
-        <span className="device-preview-compact-label">{en ? 'QUICK SPECS' : 'CẤU HÌNH TÓM TẮT'}</span>
+        <span className="device-preview-compact-label">
+          {en ? 'QUICK SPECS' : 'CẤU HÌNH TÓM TẮT'}
+        </span>
         <strong>{value.name}</strong>
         <span className="device-preview-compact-specs">
           {value.summary.slice(0, 2).join(' · ')}
@@ -296,11 +328,19 @@ function BrandChooser() {
       aria-labelledby="brand-chooser-title"
     >
       <div className="brand-chooser-heading">
-        <span className="eyebrow">{en ? 'DEVICE LIBRARY' : 'THƯ VIỆN THIẾT BỊ'}</span>
+        <span className="eyebrow">
+          {en ? 'DEVICE LIBRARY' : 'THƯ VIỆN THIẾT BỊ'}
+        </span>
         <h2 id="brand-chooser-title">
-          {en ? 'Which phone brand are you using?' : 'Bạn đang sử dụng hãng điện thoại gì?'}
+          {en
+            ? 'Which phone brand are you using?'
+            : 'Bạn đang sử dụng hãng điện thoại gì?'}
         </h2>
-        <p>{en ? 'Choose a brand to browse supported devices.' : 'Chọn hãng để mở nhóm thiết bị được hỗ trợ.'}</p>
+        <p>
+          {en
+            ? 'Choose a brand to browse supported devices.'
+            : 'Chọn hãng để mở nhóm thiết bị được hỗ trợ.'}
+        </p>
       </div>
       <div className="brand-choice-grid">
         {BRAND_CHOICES.map((brand, i) => (
@@ -394,9 +434,12 @@ function ArchiveView({
         context.registerTool(
           {
             name: 'filter_rom_catalog',
-            title: en ? 'Filter the current ROM catalog' : 'Lọc danh mục ROM đang xem',
-            description:
-              en ? 'Update the search field and return matching entries in the open catalog. Does not download files.' : 'Đổi ô tìm kiếm và trả về các mục phù hợp trong danh mục đang mở. Không tải file.',
+            title: en
+              ? 'Filter the current ROM catalog'
+              : 'Lọc danh mục ROM đang xem',
+            description: en
+              ? 'Update the search field and return matching entries in the open catalog. Does not download files.'
+              : 'Đổi ô tìm kiếm và trả về các mục phù hợp trong danh mục đang mở. Không tải file.',
             inputSchema: {
               type: 'object',
               properties: { query: { type: 'string', maxLength: 200 } },
@@ -407,7 +450,9 @@ function ArchiveView({
             execute: async (input: unknown) => {
               const q = (input as { query?: unknown })?.query;
               if (typeof q !== 'string' || q.length > 200)
-                throw new Error(en ? 'Invalid search keyword.' : 'Từ khóa không hợp lệ.');
+                throw new Error(
+                  en ? 'Invalid search keyword.' : 'Từ khóa không hợp lệ.',
+                );
               setQuery(q);
               await new Promise(requestAnimationFrame);
               return {
@@ -432,22 +477,36 @@ function ArchiveView({
   }, [data, path, kind, en]);
   const chooser = view === 'archive' && !path && !brandChoice;
   const title = path
-        ? data?.title || displayName(path.split('/').at(-1)!)
+    ? data?.title || displayName(path.split('/').at(-1)!)
     : view === 'mirrors'
-      ? en ? 'SourceForge Archive' : 'Kho lưu trữ SourceForge'
+      ? en
+        ? 'SourceForge Archive'
+        : 'Kho lưu trữ SourceForge'
       : brandChoice
-        ? en ? `${brandChoice.name} devices` : `Thiết bị ${brandChoice.name}`
-        : en ? 'Choose your device' : 'Chọn thiết bị của bạn';
+        ? en
+          ? `${brandChoice.name} devices`
+          : `Thiết bị ${brandChoice.name}`
+        : en
+          ? 'Choose your device'
+          : 'Chọn thiết bị của bạn';
   const description = path
     ? (source === 'xiaomi'
         ? data?.preview?.name || displayName(path.split('/')[0])
         : displayName(path.split('/')[0])) +
-      (en ? ' · Choose a folder or software package to download.' : ' · Chọn thư mục hoặc bản phần mềm cần tải.')
+      (en
+        ? ' · Choose a folder or software package to download.'
+        : ' · Chọn thư mục hoặc bản phần mềm cần tải.')
     : view === 'mirrors'
-      ? en ? 'Archives and additional download packages from SourceForge.' : 'Các bản lưu trữ và gói tải bổ sung từ SourceForge.'
+      ? en
+        ? 'Archives and additional download packages from SourceForge.'
+        : 'Các bản lưu trữ và gói tải bổ sung từ SourceForge.'
       : brandChoice
-        ? en ? `${brandChoice.name} · Choose a supported device to view download packages.` : `${brandChoice.name} · Chọn thiết bị được hỗ trợ để xem các gói tải.`
-        : en ? 'Choose a phone brand to browse supported devices.' : 'Chọn hãng điện thoại để mở nhóm thiết bị hỗ trợ.';
+        ? en
+          ? `${brandChoice.name} · Choose a supported device to view download packages.`
+          : `${brandChoice.name} · Chọn thiết bị được hỗ trợ để xem các gói tải.`
+        : en
+          ? 'Choose a phone brand to browse supported devices.'
+          : 'Chọn hãng điện thoại để mở nhóm thiết bị hỗ trợ.';
   return (
     <>
       <Heading
@@ -456,7 +515,9 @@ function ArchiveView({
             ? 'SourceForge Mirrors'
             : brandChoice
               ? brandChoice.name.toUpperCase()
-              : en ? 'Software Library' : 'Thư viện phần mềm'
+              : en
+                ? 'Software Library'
+                : 'Thư viện phần mềm'
         }
         title={title}
         description={description}
@@ -481,7 +542,10 @@ function ArchiveView({
         }
       />
       {brandChoice && !path && view === 'archive' && (
-        <nav className="breadcrumbs brand-back" aria-label={en ? 'Back to brand selection' : 'Quay lại chọn hãng'}>
+        <nav
+          className="breadcrumbs brand-back"
+          aria-label={en ? 'Back to brand selection' : 'Quay lại chọn hãng'}
+        >
           <a href={browse('archive')}>
             <ArrowLeft size={14} aria-hidden="true" />
             {en ? 'Choose phone brand' : 'Chọn hãng điện thoại'}
@@ -489,9 +553,16 @@ function ArchiveView({
         </nav>
       )}
       {path && (
-        <nav className="breadcrumbs" aria-label={en ? 'Breadcrumbs' : 'Đường dẫn'}>
+        <nav
+          className="breadcrumbs"
+          aria-label={en ? 'Breadcrumbs' : 'Đường dẫn'}
+        >
           <a href={browse(view, '', brand)}>
-            {view === 'mirrors' ? 'SourceForge' : (en ? 'Choose phone brand' : 'Chọn hãng điện thoại')}
+            {view === 'mirrors'
+              ? 'SourceForge'
+              : en
+                ? 'Choose phone brand'
+                : 'Chọn hãng điện thoại'}
           </a>
           {path.split('/').map((part, i) => (
             <span key={i}>
@@ -524,7 +595,11 @@ function ArchiveView({
             ) : (
               <ShieldCheck size={17} />
             )}
-            <span>{en ? 'Important technical notes' : 'Lưu ý kỹ thuật quan trọng phải đọc'}</span>
+            <span>
+              {en
+                ? 'Important technical notes'
+                : 'Lưu ý kỹ thuật quan trọng phải đọc'}
+            </span>
             <ChevronDown
               size={17}
               className="technical-note-chevron"
@@ -542,7 +617,13 @@ function ArchiveView({
                 {isArb(n) ? (
                   <span className="arb-tag">
                     <TriangleAlert size={12} />
-                    <strong>{n} ({en ? 'Anti-Rollback warning' : 'Cảnh báo chống hạ cấp ARB'})</strong>
+                    <strong>
+                      {n} (
+                      {en
+                        ? 'Anti-Rollback warning'
+                        : 'Cảnh báo chống hạ cấp ARB'}
+                      )
+                    </strong>
                   </span>
                 ) : (
                   n
@@ -563,7 +644,13 @@ function ArchiveView({
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={
-                  path ? (en ? 'Search this folder…' : 'Tìm tên trong thư mục này…') : (en ? 'Search devices…' : 'Tìm thiết bị…')
+                  path
+                    ? en
+                      ? 'Search this folder…'
+                      : 'Tìm tên trong thư mục này…'
+                    : en
+                      ? 'Search devices…'
+                      : 'Tìm thiết bị…'
                 }
                 aria-label={en ? 'Search catalog' : 'Tìm trong danh mục'}
               />
@@ -603,7 +690,7 @@ function ArchiveView({
                       : 'https://sourceforge.net/projects/oneplus13flashers/files/'
                 }
               >
-                  {en ? 'Open source archive' : 'Mở kho nguồn'}
+                {en ? 'Open source archive' : 'Mở kho nguồn'}
               </External>
             </>
           ) : (
@@ -611,8 +698,18 @@ function ArchiveView({
               {folders.length > 0 && (
                 <>
                   <div className="section-title">
-                    <h2>{path ? (en ? 'Folder' : 'Thư mục') : (en ? 'Devices & tools' : 'Thiết bị & công cụ')}</h2>
-                    <span>{folders.length} {en ? 'items' : 'mục'}</span>
+                    <h2>
+                      {path
+                        ? en
+                          ? 'Folder'
+                          : 'Thư mục'
+                        : en
+                          ? 'Devices & tools'
+                          : 'Thiết bị & công cụ'}
+                    </h2>
+                    <span>
+                      {folders.length} {en ? 'items' : 'mục'}
+                    </span>
                   </div>
                   <div className="device-grid">
                     {folders.map((entry, i) => {
@@ -641,19 +738,34 @@ function ArchiveView({
                           <div className="device-info">
                             <span className="meta">
                               {path
-                                ? en ? 'Folder' : 'Thư mục'
+                                ? en
+                                  ? 'Folder'
+                                  : 'Thư mục'
                                 : /pad/i.test(entry.name)
-                                  ? en ? 'Tablet' : 'Máy tính bảng'
+                                  ? en
+                                    ? 'Tablet'
+                                    : 'Máy tính bảng'
                                   : xiaomiDevice
-                                    ? en ? 'Phone / tablet' : 'Điện thoại / máy tính bảng'
+                                    ? en
+                                      ? 'Phone / tablet'
+                                      : 'Điện thoại / máy tính bảng'
                                     : /oneplus|oppo|realme|xiaomi|redmi|poco/i.test(
                                           entry.name,
                                         )
-                                      ? en ? 'Phone' : 'Điện thoại'
-                                      : en ? 'Tool' : 'Công cụ'}
+                                      ? en
+                                        ? 'Phone'
+                                        : 'Điện thoại'
+                                      : en
+                                        ? 'Tool'
+                                        : 'Công cụ'}
                             </span>
                             <h3>{displayName(entry.name)}</h3>
-                            <p>{localizedEntryDescription(entry.description, en) || (en ? 'Browse folder' : 'Xem thư mục')}</p>
+                            <p>
+                              {localizedEntryDescription(
+                                entry.description,
+                                en,
+                              ) || (en ? 'Browse folder' : 'Xem thư mục')}
+                            </p>
                           </div>
                           <div className="device-arrow">
                             <ArrowUpRight size={17} />
@@ -667,8 +779,12 @@ function ArchiveView({
               {files.length > 0 && (
                 <>
                   <div className="section-title">
-                    <h2>{en ? 'Software & documents' : 'Bản phần mềm & tài liệu'}</h2>
-                    <span>{files.length} {en ? 'items' : 'mục'}</span>
+                    <h2>
+                      {en ? 'Software & documents' : 'Bản phần mềm & tài liệu'}
+                    </h2>
+                    <span>
+                      {files.length} {en ? 'items' : 'mục'}
+                    </span>
                   </div>
                   <div className="file-list">
                     {files.map((e) => (
@@ -686,20 +802,30 @@ function ArchiveView({
                 <EmptyState
                   title={
                     query
-                      ? en ? 'No results found' : 'Không tìm thấy kết quả'
-                      : en ? 'No software has been added' : 'Phần mềm chưa được thêm vào'
+                      ? en
+                        ? 'No results found'
+                        : 'Không tìm thấy kết quả'
+                      : en
+                        ? 'No software has been added'
+                        : 'Phần mềm chưa được thêm vào'
                   }
                   description={
                     query
-                      ? en ? 'Try a device name, version, or shorter keyword.' : 'Thử tên thiết bị, phiên bản hoặc từ khóa ngắn hơn.'
-                      : en ? 'No results match the current filters.' : 'Chưa có kết quả phù hợp với các bộ lọc hiện tại.'
+                      ? en
+                        ? 'Try a device name, version, or shorter keyword.'
+                        : 'Thử tên thiết bị, phiên bản hoặc từ khóa ngắn hơn.'
+                      : en
+                        ? 'No results match the current filters.'
+                        : 'Chưa có kết quả phù hợp với các bộ lọc hiện tại.'
                   }
                 />
               )}
               {!path && !query && data?.latest.length ? (
                 <>
                   <div className="section-title">
-                    <h2>{en ? 'Latest updates...' : 'Những cập nhật mới...'}</h2>
+                    <h2>
+                      {en ? 'Latest updates...' : 'Những cập nhật mới...'}
+                    </h2>
                     <span>{en ? 'Recently updated' : 'Cập nhật gần đây'}</span>
                   </div>
                   <div className="file-list">
@@ -749,7 +875,9 @@ export function FileRow({
       </div>
       <button className="file-title grow" onClick={() => onSelect(entry)}>
         <span className="meta">
-          {displayName(entry.device || entry.parent || (en ? 'Device' : 'Thiết bị'))}
+          {displayName(
+            entry.device || entry.parent || (en ? 'Device' : 'Thiết bị'),
+          )}
           {entry.region ? ' · ' + regionLabel(entry.region, language) : ''}
           {entry.notes?.filter(isArb).map((note, i) => (
             <span key={i} className="arb-tag">
@@ -763,7 +891,8 @@ export function FileRow({
           <p>
             {entry.size
               ? formatBytes(entry.size)
-              : entry.sizeLabel || (en ? 'Size unavailable' : 'Dung lượng chưa có')}
+              : entry.sizeLabel ||
+                (en ? 'Size unavailable' : 'Dung lượng chưa có')}
             {entry.isLatest ? ` · ${en ? 'Latest' : 'Mới nhất'}` : ''}
           </p>
         )}
@@ -790,7 +919,13 @@ export function FileRow({
           className="action"
           onClick={() => onSelect(entry)}
         >
-          {en ? 'Details' : 'Chi tiết'}
+          {entry.source === 'ota'
+            ? en
+              ? 'Get link & Download'
+              : 'Lấy link & Tải'
+            : en
+              ? 'Details'
+              : 'Chi tiết'}
           <ChevronRight size={14} />
         </Button>
       </div>
@@ -828,11 +963,353 @@ function TelegramMirrorButton({ url }: { url: string }) {
       variant="outline"
       className="action secondary-action"
       onClick={handleMirror}
-      title={en ? 'Copy the /m command and open Telegram to create a Google Drive mirror' : 'Sao chép cú pháp /m và mở nhóm Telegram để tạo mirror Google Drive'}
+      title={
+        en
+          ? 'Copy the /m command and open Telegram to create a Google Drive mirror'
+          : 'Sao chép cú pháp /m và mở nhóm Telegram để tạo mirror Google Drive'
+      }
     >
       {copied ? <Check size={15} /> : <Send size={15} />}
-      {copied ? (en ? 'Mirror command copied' : 'Đã chép lệnh mirror') : 'Mirror Google Drive'}
+      {copied
+        ? en
+          ? 'Mirror command copied'
+          : 'Đã chép lệnh mirror'
+        : 'Mirror Google Drive'}
     </Button>
+  );
+}
+
+function OtaDownloadBox({ entry }: { entry: Entry }) {
+  const { language } = useLanguage();
+  const en = language === 'en';
+  const [resolvedUrl, setResolvedUrl] = useState<string>(
+    entry.downloadUrl || '',
+  );
+  const [expiresAt, setExpiresAt] = useState<number>(entry.expiresAt || 0);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>('');
+  const [remaining, setRemaining] = useState<number>(0);
+  const [showCli, setShowCli] = useState<boolean>(false);
+
+  useEffect(() => {
+    setResolvedUrl(entry.downloadUrl || '');
+    setExpiresAt(entry.expiresAt || 0);
+    setError('');
+  }, [entry.id, entry.downloadUrl, entry.expiresAt]);
+
+  useEffect(() => {
+    if (!expiresAt || !resolvedUrl) {
+      setRemaining(0);
+      return;
+    }
+    const update = () => {
+      const rem = expiresAt - Math.floor(Date.now() / 1000);
+      setRemaining(rem > 0 ? rem : 0);
+    };
+    update();
+    const timer = setInterval(update, 1000);
+    return () => clearInterval(timer);
+  }, [expiresAt, resolvedUrl]);
+
+  const triggerDownload = (url: string) => {
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = '';
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      if (document.body.contains(a)) document.body.removeChild(a);
+    }, 200);
+  };
+
+  const handleResolve = async (autoDownload: boolean) => {
+    setLoading(true);
+    setError('');
+    try {
+      const query = new URLSearchParams({
+        id: entry.id,
+        device: entry.device || '',
+        region: entry.region || '',
+        version: entry.version || entry.name || '',
+      });
+      const data = await api<{
+        ok: boolean;
+        url: string;
+        expires_at?: number;
+        manual?: boolean;
+      }>(`/api/ota/resolve?${query.toString()}`);
+
+      if (data.ok && data.url) {
+        setResolvedUrl(data.url);
+        setExpiresAt(data.expires_at || 0);
+        if (autoDownload) {
+          triggerDownload(data.url);
+        }
+      } else {
+        throw new Error(
+          en
+            ? 'Could not retrieve OTA link.'
+            : 'Không lấy được link OTA từ máy chủ nguồn.',
+        );
+      }
+    } catch (err) {
+      setError(
+        (err as Error).message ||
+          (en
+            ? 'Failed to resolve OTA link.'
+            : 'Không thể lấy link tải từ máy chủ nguồn.'),
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const isExpired = expiresAt > 0 && remaining <= 0 && resolvedUrl !== '';
+  const formatTimer = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  };
+
+  return (
+    <div className="download-box ota-download-box">
+      <h3>{en ? 'Direct OTA Download' : 'Tải trực tiếp bản OTA'}</h3>
+      <p>
+        {en
+          ? 'Link is requested directly from the source server in the background without needing the external tool.'
+          : 'Hệ thống tự động request lấy link tải trực tiếp từ máy chủ nguồn ngầm mà không cần mở công cụ OTA bên ngoài.'}
+      </p>
+
+      <div className="action-row">
+        {resolvedUrl && !isExpired ? (
+          <>
+            <External href={resolvedUrl} primary>
+              <Download size={15} />
+              {en ? 'Download File' : 'Tải xuống File'}
+            </External>
+            <CopyButton
+              value={resolvedUrl}
+              label={en ? 'Copy link' : 'Sao chép link tải'}
+            />
+            <TelegramMirrorButton url={resolvedUrl} />
+            <Button
+              variant="outline"
+              className="action secondary-action"
+              onClick={() => handleResolve(false)}
+              disabled={loading}
+              title={en ? 'Refresh download link' : 'Làm mới link tải'}
+            >
+              <RotateCw size={14} className={loading ? 'animate-spin' : ''} />
+              {en ? 'Refresh link' : 'Làm mới link'}
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button
+              className="action primary"
+              onClick={() => handleResolve(true)}
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <Loader2 size={15} className="animate-spin" />
+                  {en
+                    ? 'Resolving link from source...'
+                    : 'Đang lấy link từ nguồn ngầm...'}
+                </>
+              ) : (
+                <>
+                  <Download size={15} />
+                  {isExpired
+                    ? en
+                      ? 'Renew & Download'
+                      : 'Lấy lại link & Tải xuống'
+                    : en
+                      ? 'Auto Download (Direct)'
+                      : 'Tự động lấy link & Tải xuống'}
+                </>
+              )}
+            </Button>
+            {!loading && (
+              <Button
+                variant="outline"
+                className="action secondary-action"
+                onClick={() => handleResolve(false)}
+              >
+                <Sparkles size={14} />
+                {en ? 'Get direct link only' : 'Chỉ lấy link tải'}
+              </Button>
+            )}
+            <External href={entry.sourceUrl}>
+              {en ? 'Open source tool' : 'Mở công cụ nguồn'}
+            </External>
+          </>
+        )}
+      </div>
+
+      {error && (
+        <div
+          className="field-error"
+          style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+        >
+          <TriangleAlert size={14} />
+          <span>{error}</span>
+          <Button
+            variant="ghost"
+            size="sm"
+            style={{ padding: '0 8px', height: '24px' }}
+            onClick={() => handleResolve(true)}
+          >
+            {en ? 'Retry' : 'Thử lại'}
+          </Button>
+        </div>
+      )}
+
+      {resolvedUrl && !isExpired && expiresAt > 0 && remaining > 0 && (
+        <div className="ota-timer-info">
+          <Clock size={13} />
+          <span>
+            {en
+              ? `Link expires in ${formatTimer(remaining)} (Ongoing downloads continue normally)`
+              : `Link tải có hiệu lực trong ${formatTimer(remaining)} (Tiến trình tải dở dang vẫn tiếp tục bình thường)`}
+          </span>
+        </div>
+      )}
+
+      {resolvedUrl && !isExpired && expiresAt === 0 && (
+        <div className="ota-timer-info ota-timer-permanent">
+          <Check size={13} />
+          <span>
+            {en
+              ? 'Official permanent download link prepared'
+              : 'Đã chuẩn bị link tải trực tiếp chính thức'}
+          </span>
+        </div>
+      )}
+
+      {isExpired && (
+        <div className="ota-timer-info ota-timer-expired">
+          <TriangleAlert size={13} />
+          <span>
+            {en
+              ? 'Link has expired. Click Renew to prepare a fresh link.'
+              : 'Link tải đã hết hạn. Nhấn Lấy lại link để tạo link mới.'}
+          </span>
+        </div>
+      )}
+
+      <div
+        className="ota-meta-row"
+        style={{
+          marginTop: 12,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          flexWrap: 'wrap',
+        }}
+      >
+        <code className="ota-version">{entry.version}</code>
+        <CopyButton
+          value={entry.version || entry.name}
+          label={en ? 'Copy version' : 'Sao chép phiên bản'}
+        />
+        {resolvedUrl && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-xs"
+            onClick={() => setShowCli((prev) => !prev)}
+            style={{ height: '28px', padding: '0 8px' }}
+          >
+            <Terminal size={13} />
+            {showCli
+              ? en
+                ? 'Hide cURL / aria2'
+                : 'Ẩn lệnh cURL / aria2'
+              : en
+                ? 'cURL / aria2 command'
+                : 'Lệnh cURL / aria2'}
+          </Button>
+        )}
+      </div>
+
+      {resolvedUrl && showCli && (
+        <div
+          className="ota-cli-box"
+          style={{
+            marginTop: 12,
+            padding: '12px',
+            borderRadius: 10,
+            border: '1px solid var(--border)',
+            background: 'var(--card)',
+            fontSize: '12px',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: 6,
+            }}
+          >
+            <span style={{ fontWeight: 600 }}>aria2c:</span>
+            <CopyButton
+              value={`aria2c -x8 -s8 "${resolvedUrl}"`}
+              label={en ? 'Copy aria2c' : 'Chép lệnh aria2c'}
+            />
+          </div>
+          <code
+            style={{
+              display: 'block',
+              wordBreak: 'break-all',
+              marginBottom: 10,
+              color: 'var(--foreground)',
+              padding: '6px 8px',
+              borderRadius: '6px',
+              background: 'var(--background)',
+            }}
+          >
+            {`aria2c -x8 -s8 "${resolvedUrl}"`}
+          </code>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: 6,
+            }}
+          >
+            <span style={{ fontWeight: 600 }}>cURL:</span>
+            <CopyButton
+              value={`curl -LO "${resolvedUrl}"`}
+              label={en ? 'Copy cURL' : 'Chép lệnh cURL'}
+            />
+          </div>
+          <code
+            style={{
+              display: 'block',
+              wordBreak: 'break-all',
+              color: 'var(--foreground)',
+              padding: '6px 8px',
+              borderRadius: '6px',
+              background: 'var(--background)',
+            }}
+          >
+            {`curl -LO "${resolvedUrl}"`}
+          </code>
+        </div>
+      )}
+
+      {entry.mirrors?.map((m, i) => (
+        <div className="mirror-row" key={i}>
+          <External href={m.url}>{m.name}</External>
+          <CopyButton value={m.url} label="Chép link" />
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -898,7 +1375,9 @@ export function EntrySheet({
               <div className="sheet-body">
                 <Tabs value={tab} onValueChange={(v) => setTab(String(v))}>
                   <TabsList className="wide-tabs">
-                    <TabsTrigger value="info">{en ? 'Info & downloads' : 'Thông tin & tải'}</TabsTrigger>
+                    <TabsTrigger value="info">
+                      {en ? 'Info & downloads' : 'Thông tin & tải'}
+                    </TabsTrigger>
                     <TabsTrigger value="changelog">Changelog</TabsTrigger>
                   </TabsList>
                   <TabsContent value="info">
@@ -908,7 +1387,8 @@ export function EntrySheet({
                         <strong>
                           {value.size
                             ? formatBytes(value.size)
-                            : value.sizeLabel || (en ? 'No data' : 'Chưa có dữ liệu')}
+                            : value.sizeLabel ||
+                              (en ? 'No data' : 'Chưa có dữ liệu')}
                         </strong>
                       </div>
                       <div>
@@ -921,7 +1401,9 @@ export function EntrySheet({
                               : value.source === 'xiaomi'
                                 ? 'HyperOS.fans'
                                 : value.source === 'custom'
-                                  ? (en ? 'Additional link' : 'Liên kết bổ sung')
+                                  ? en
+                                    ? 'Additional link'
+                                    : 'Liên kết bổ sung'
                                   : 'ROM Archive'}
                         </strong>
                       </div>
@@ -947,7 +1429,11 @@ export function EntrySheet({
                         {value.checksumType || 'Checksum'}
                       </span>
                       {detail.loading ? (
-                        <p>{en ? 'Checking checksum…' : 'Đang kiểm tra checksum…'}</p>
+                        <p>
+                          {en
+                            ? 'Checking checksum…'
+                            : 'Đang kiểm tra checksum…'}
+                        </p>
                       ) : value.checksum ? (
                         <>
                           <code>{value.checksum}</code>
@@ -957,7 +1443,11 @@ export function EntrySheet({
                           />
                         </>
                       ) : (
-                        <p>{en ? 'The source has not provided a verified checksum.' : 'Nguồn chưa cung cấp checksum đã xác minh.'}</p>
+                        <p>
+                          {en
+                            ? 'The source has not provided a verified checksum.'
+                            : 'Nguồn chưa cung cấp checksum đã xác minh.'}
+                        </p>
                       )}
                     </div>
                     {detail.error && (
@@ -981,18 +1471,22 @@ export function EntrySheet({
                                 <p className={arb ? 'arb-text' : ''}>
                                   {arb ? (
                                     <strong>
-                                      {n} ({en ? 'Anti-Rollback warning' : 'Cảnh báo chống hạ cấp Anti-Rollback'})
+                                      {n} (
+                                      {en
+                                        ? 'Anti-Rollback warning'
+                                        : 'Cảnh báo chống hạ cấp Anti-Rollback'}
+                                      )
                                     </strong>
                                   ) : (
                                     n
                                   )}
                                 </p>
                                 {arb && (
-                                    <p className="arb-warning-sub">
-                                      {en
-                                        ? 'Downgrading to a build with a lower ARB index can permanently hard-brick the device.'
-                                        : 'Hạ cấp xuống bản có chỉ số ARB thấp hơn có thể làm máy mất nguồn / hard brick hoàn toàn!'}
-                                    </p>
+                                  <p className="arb-warning-sub">
+                                    {en
+                                      ? 'Downgrading to a build with a lower ARB index can permanently hard-brick the device.'
+                                      : 'Hạ cấp xuống bản có chỉ số ARB thấp hơn có thể làm máy mất nguồn / hard brick hoàn toàn!'}
+                                  </p>
                                 )}
                               </div>
                             </div>
@@ -1000,57 +1494,46 @@ export function EntrySheet({
                         })}
                       </div>
                     ) : null}
-                    <div className="download-box">
-                      <h3>
-                        {value.source === 'ota'
-                          ? (en ? 'Download via OTA tool' : 'Tải qua công cụ OTA')
-                          : (en ? 'Download links' : 'Liên kết tải')}
-                      </h3>
-                      <p>
-                        {value.source === 'ota'
-                          ? (en ? 'Open the source tool and choose the correct device, region, and version below.' : 'Mở công cụ nguồn, chọn đúng thiết bị, khu vực và phiên bản bên dưới.')
-                          : (en ? 'The file is provided by the source server.' : 'File được cung cấp bởi máy chủ nguồn.')}
-                      </p>
-                      <div className="action-row">
-                        {value.downloadUrl ? (
-                          <>
-                            <External href={value.downloadUrl} primary>
-                              {en ? 'Download' : 'Tải xuống'}
+                    {value.source === 'ota' ? (
+                      <OtaDownloadBox entry={value} />
+                    ) : (
+                      <div className="download-box">
+                        <h3>{en ? 'Download links' : 'Liên kết tải'}</h3>
+                        <p>
+                          {en
+                            ? 'The file is provided by the source server.'
+                            : 'File được cung cấp bởi máy chủ nguồn.'}
+                        </p>
+                        <div className="action-row">
+                          {value.downloadUrl ? (
+                            <>
+                              <External href={value.downloadUrl} primary>
+                                {en ? 'Download' : 'Tải xuống'}
+                              </External>
+                              <CopyButton
+                                value={value.downloadUrl}
+                                label="Sao chép link"
+                              />
+                            </>
+                          ) : (
+                            <External href={value.sourceUrl} primary>
+                              {en ? 'Open release page' : 'Mở trang phát hành'}
                             </External>
-                            <CopyButton
-                              value={value.downloadUrl}
-                              label="Sao chép link"
+                          )}
+                          {(value.downloadUrl || value.sourceUrl) && (
+                            <TelegramMirrorButton
+                              url={value.downloadUrl || value.sourceUrl}
                             />
-                          </>
-                        ) : (
-                          <External href={value.sourceUrl} primary>
-                            {value.source === 'ota'
-                              ? (en ? 'Open OTA tool' : 'Mở công cụ OTA')
-                              : (en ? 'Open release page' : 'Mở trang phát hành')}
-                          </External>
-                        )}
-                        {(value.downloadUrl || value.sourceUrl) && (
-                          <TelegramMirrorButton
-                            url={value.downloadUrl || value.sourceUrl}
-                          />
-                        )}
-                      </div>
-                      {value.source === 'ota' && (
-                        <>
-                          <code className="ota-version">{value.version}</code>
-                          <CopyButton
-                            value={value.version || value.name}
-                            label="Sao chép phiên bản"
-                          />
-                        </>
-                      )}
-                      {value.mirrors?.map((m, i) => (
-                        <div className="mirror-row" key={i}>
-                          <External href={m.url}>{m.name}</External>
-                          <CopyButton value={m.url} label="Chép link" />
+                          )}
                         </div>
-                      ))}
-                    </div>
+                        {value.mirrors?.map((m, i) => (
+                          <div className="mirror-row" key={i}>
+                            <External href={m.url}>{m.name}</External>
+                            <CopyButton value={m.url} label="Chép link" />
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     {value.toolsUrl &&
                       value.source === 'archive' &&
                       value.kind === 'file' && (
@@ -1063,11 +1546,15 @@ export function EntrySheet({
                             <Folder size={15} />
                             Browse ZIP
                           </Button>
-                          <External href={value.toolsUrl}>{en ? 'Open source' : 'Mở nguồn'}</External>
+                          <External href={value.toolsUrl}>
+                            {en ? 'Open source' : 'Mở nguồn'}
+                          </External>
                         </div>
                       )}
                     <div className="source-bottom">
-                      <External href={value.sourceUrl}>{en ? 'Source page' : 'Trang nguồn'}</External>
+                      <External href={value.sourceUrl}>
+                        {en ? 'Source page' : 'Trang nguồn'}
+                      </External>
                     </div>
                   </TabsContent>
                   <TabsContent value="changelog">
@@ -1084,12 +1571,20 @@ export function EntrySheet({
                               className="action"
                               onClick={() => setOriginal(!original)}
                             >
-                              {original ? (en ? 'View Vietnamese' : 'Xem tiếng Việt') : (en ? 'View original' : 'Xem bản gốc')}
+                              {original
+                                ? en
+                                  ? 'View Vietnamese'
+                                  : 'Xem tiếng Việt'
+                                : en
+                                  ? 'View original'
+                                  : 'Xem bản gốc'}
                             </Button>
                           )}
                           {changes.data.sourceUrl && (
                             <External href={changes.data.sourceUrl}>
-                              {en ? 'Open original changelog' : 'Mở changelog gốc'}
+                              {en
+                                ? 'Open original changelog'
+                                : 'Mở changelog gốc'}
                             </External>
                           )}
                         </div>
@@ -1159,7 +1654,9 @@ function ZipBrowserSheet({
           <SheetDescription>
             {result.data
               ? `${result.data.summary.files} ${en ? 'files' : 'file'} · ${result.data.summary.folders} ${en ? 'folders' : 'thư mục'} · ${result.data.summary.entries} ${en ? 'items' : 'mục'}`
-              : (en ? 'Browse the ZIP contents and download individual files.' : 'Duyệt nội dung ZIP và tải riêng từng file.')}
+              : en
+                ? 'Browse the ZIP contents and download individual files.'
+                : 'Duyệt nội dung ZIP và tải riêng từng file.'}
           </SheetDescription>
         </SheetHeader>
         <div className="zip-browser-body">
@@ -1168,15 +1665,24 @@ function ZipBrowserSheet({
           ) : result.error ? (
             <>
               <ErrorState
-                error={en ? 'Could not read the ZIP tree from the source.' : 'Chưa đọc được cây ZIP từ nguồn.'}
+                error={
+                  en
+                    ? 'Could not read the ZIP tree from the source.'
+                    : 'Chưa đọc được cây ZIP từ nguồn.'
+                }
                 retry={result.reload}
               />
               {entry?.toolsUrl && (
-                <External href={entry.toolsUrl}>{en ? 'Open source ZIP browser' : 'Mở Browser ZIP nguồn'}</External>
+                <External href={entry.toolsUrl}>
+                  {en ? 'Open source ZIP browser' : 'Mở Browser ZIP nguồn'}
+                </External>
               )}
             </>
           ) : result.data ? (
-            <ul className="zip-tree-list" aria-label={en ? 'ZIP contents' : 'Nội dung ZIP'}>
+            <ul
+              className="zip-tree-list"
+              aria-label={en ? 'ZIP contents' : 'Nội dung ZIP'}
+            >
               {result.data.entries.map((item) => (
                 <ZipTreeItem key={item.path} item={item} />
               ))}
@@ -1204,7 +1710,9 @@ function ZipTreeItem({ item }: { item: ZipEntry }) {
           <Folder size={17} />
           <span className="zip-tree-name">
             <strong>{item.name}</strong>
-            <small>{item.children?.length || 0} {en ? 'items' : 'mục'}</small>
+            <small>
+              {item.children?.length || 0} {en ? 'items' : 'mục'}
+            </small>
           </span>
           <ChevronDown
             size={16}
@@ -1243,7 +1751,9 @@ function ZipTreeItem({ item }: { item: ZipEntry }) {
           {en ? 'Download file' : 'Tải file'}
         </a>
       ) : (
-        <span className="zip-missing-link">{en ? 'No link available' : 'Không có link'}</span>
+        <span className="zip-missing-link">
+          {en ? 'No link available' : 'Không có link'}
+        </span>
       )}
     </li>
   );
@@ -1284,7 +1794,11 @@ function OtaView() {
       <Heading
         eyebrow={en ? 'OFFICIAL FIRMWARE' : 'FIRMWARE CHÍNH THỨC'}
         title={en ? 'Find the right OTA build' : 'Tìm bản OTA phù hợp'}
-        description={en ? 'Choose a device and region. Review details before downloading.' : 'Chọn thiết bị và khu vực. Xem thông tin trước khi tải.'}
+        description={
+          en
+            ? 'Choose a device and region. Review details before downloading.'
+            : 'Chọn thiết bị và khu vực. Xem thông tin trước khi tải.'
+        }
         extra={
           <span className="subtle-pill">
             <LayersIcon />
@@ -1308,7 +1822,9 @@ function OtaView() {
           onChange={setRegion}
           options={[
             { value: 'all', label: en ? 'All regions' : 'Tất cả khu vực' },
-            ...regions.filter(Boolean).map((r) => ({ value: r, label: regionLabel(r, language) })),
+            ...regions
+              .filter(Boolean)
+              .map((r) => ({ value: r, label: regionLabel(r, language) })),
           ]}
         />
         <label className="filter-label" htmlFor="ota-version">
@@ -1329,8 +1845,16 @@ function OtaView() {
       ) : (
         <>
           <div className="section-title">
-            <h2>{device ? displayName(device) : (en ? 'Firmware builds' : 'Các bản firmware')}</h2>
-            <span>{filtered.length} {en ? 'builds' : 'bản'}</span>
+            <h2>
+              {device
+                ? displayName(device)
+                : en
+                  ? 'Firmware builds'
+                  : 'Các bản firmware'}
+            </h2>
+            <span>
+              {filtered.length} {en ? 'builds' : 'bản'}
+            </span>
           </div>
           <PaginatedEntries entries={filtered} onSelect={setSelected} />
           {result.data && <Freshness value={result.data} />}
@@ -1363,7 +1887,9 @@ function PaginatedEntries({
           ))}
         </div>
       ) : (
-        <EmptyState title={en ? 'No matching versions' : 'Không có phiên bản phù hợp'} />
+        <EmptyState
+          title={en ? 'No matching versions' : 'Không có phiên bản phù hợp'}
+        />
       )}
       {limit < entries.length && (
         <div className="load-more">
@@ -1372,7 +1898,8 @@ function PaginatedEntries({
             variant="outline"
             onClick={() => setLimit((v) => v + 30)}
           >
-            {en ? 'Load more' : 'Xem thêm'} ({entries.length - limit} {en ? 'builds' : 'bản'})
+            {en ? 'Load more' : 'Xem thêm'} ({entries.length - limit}{' '}
+            {en ? 'builds' : 'bản'})
           </Button>
         </div>
       )}
@@ -1389,7 +1916,11 @@ function RecoveryView() {
       <Heading
         eyebrow={en ? 'RECOVERY & RESTORATION' : 'RECOVERY & KHÔI PHỤC'}
         title="Recovery / OFOX"
-        description={en ? 'Recovery releases organized by device.' : 'Trang phát hành và bản recovery theo thiết bị.'}
+        description={
+          en
+            ? 'Recovery releases organized by device.'
+            : 'Trang phát hành và bản recovery theo thiết bị.'
+        }
       />
       {result.loading ? (
         <Loading />
@@ -1408,7 +1939,11 @@ function RecoveryView() {
         <ShieldCheck size={24} />
         <div>
           <h3>{en ? 'Device rescue / EDL' : 'Cứu máy / EDL'}</h3>
-          <p>{en ? 'Browse recovery packages in the source archive.' : 'Tra cứu các gói hỗ trợ khôi phục trong kho nguồn.'}</p>
+          <p>
+            {en
+              ? 'Browse recovery packages in the source archive.'
+              : 'Tra cứu các gói hỗ trợ khôi phục trong kho nguồn.'}
+          </p>
         </div>
         <a className="action secondary-action" href={browse('archive', 'EDL')}>
           {en ? 'Open catalog' : 'Mở danh mục'}
@@ -1441,7 +1976,11 @@ function StatsView() {
       <Heading
         eyebrow={en ? 'SERVER STATUS' : 'TRẠNG THÁI MÁY CHỦ'}
         title={en ? 'Download server monitor' : 'Theo dõi kho tải'}
-        description={en ? 'Source server traffic, refreshed every 30 seconds while you watch.' : 'Lưu lượng của máy chủ nguồn, cập nhật mỗi 30 giây khi bạn đang xem.'}
+        description={
+          en
+            ? 'Source server traffic, refreshed every 30 seconds while you watch.'
+            : 'Lưu lượng của máy chủ nguồn, cập nhật mỗi 30 giây khi bạn đang xem.'
+        }
         extra={
           <span className="subtle-pill">
             <Activity size={16} /> {en ? 'Source traffic' : 'Lưu lượng nguồn'}
@@ -1466,12 +2005,20 @@ function StatsView() {
                 <h2>{d.name}</h2>
                 <span className={`state-badge ${stale ? 'is-stale' : ''}`}>
                   <span className="status-dot" />
-                  {stale ? (en ? 'Stale / unverified data' : 'Dữ liệu cũ / chưa xác minh') : (en ? 'Updating' : 'Đang cập nhật')}
+                  {stale
+                    ? en
+                      ? 'Stale / unverified data'
+                      : 'Dữ liệu cũ / chưa xác minh'
+                    : en
+                      ? 'Updating'
+                      : 'Đang cập nhật'}
                 </span>
               </div>
               <div className="stats-grid">
                 <div className="panel stat-card prominent">
-                  <span>{en ? 'Current bandwidth' : 'Băng thông đang tải lên'}</span>
+                  <span>
+                    {en ? 'Current bandwidth' : 'Băng thông đang tải lên'}
+                  </span>
                   <strong>
                     {d.speed != null
                       ? d.speed.toLocaleString('vi-VN', {
@@ -1503,10 +2050,15 @@ function StatsView() {
               </div>
               <p className="stats-note">
                 {d.updatedAt
-                  ? (en ? 'Source updated: ' : 'Nguồn cập nhật: ') + timeLabel(d.updatedAt)
-                  : (en ? 'The source has not provided a reliable update time.' : 'Nguồn chưa cung cấp thời điểm cập nhật đáng tin cậy.')}
+                  ? (en ? 'Source updated: ' : 'Nguồn cập nhật: ') +
+                    timeLabel(d.updatedAt)
+                  : en
+                    ? 'The source has not provided a reliable update time.'
+                    : 'Nguồn chưa cung cấp thời điểm cập nhật đáng tin cậy.'}
                 {stale
-                  ? en ? ' · Do not treat these numbers as live status.' : ' · Không dùng các số này như trạng thái trực tiếp.'
+                  ? en
+                    ? ' · Do not treat these numbers as live status.'
+                    : ' · Không dùng các số này như trạng thái trực tiếp.'
                   : ''}
               </p>
               {(d.error || row.error) && (
@@ -1528,7 +2080,11 @@ function ChangelogView() {
       <Heading
         eyebrow={en ? 'UPDATE LOG' : 'NHẬT KÝ CẬP NHẬT'}
         title={en ? 'Website changelog' : 'Changelog của website'}
-        description={en ? 'Website changes. ROM changelogs are included with each download.' : 'Các thay đổi của Kho ROM Việt. Changelog ROM nằm trong từng bản tải.'}
+        description={
+          en
+            ? 'Website changes. ROM changelogs are included with each download.'
+            : 'Các thay đổi của Kho ROM Việt. Changelog ROM nằm trong từng bản tải.'
+        }
       />
       {result.loading ? (
         <Loading />
@@ -1549,7 +2105,11 @@ function ChangelogView() {
       ) : (
         <EmptyState
           title={en ? 'No updates published' : 'Chưa có cập nhật được đăng'}
-          description={en ? 'Website updates will appear here after publication.' : 'Nhật ký của website sẽ xuất hiện ở đây sau khi quản trị viên xuất bản.'}
+          description={
+            en
+              ? 'Website updates will appear here after publication.'
+              : 'Nhật ký của website sẽ xuất hiện ở đây sau khi quản trị viên xuất bản.'
+          }
         />
       )}
     </>
@@ -1564,20 +2124,29 @@ function DonateView({ config }: { config: Settings }) {
       <Heading
         eyebrow={en ? 'SUPPORT THE WEBSITE' : 'ĐỒNG HÀNH CÙNG WEBSITE'}
         title={en ? 'Support' : 'Ủng hộ'}
-        description={en ? 'Information provided by the website administrator.' : 'Thông tin do quản trị viên website cung cấp.'}
+        description={
+          en
+            ? 'Information provided by the website administrator.'
+            : 'Thông tin do quản trị viên website cung cấp.'
+        }
       />
       <div className="panel donate-card">
         <Heart size={30} />
         <Markdown
           content={
-            d?.text ||
-            en
+            d?.text || en
               ? 'Your support helps maintain a fast download server and grow the OnePlus ROM archive for the community.'
               : 'Mọi sự ủng hộ của bạn là nguồn động lực lớn để duy trì máy chủ tải tốc độ cao và phát triển kho lưu trữ ROM OnePlus cho cộng đồng.'
           }
           className="preserve-text"
         />
-        {d?.qr && <img className="donate-qr" src={d.qr} alt={en ? 'Support QR code' : 'Mã QR ủng hộ'} />}
+        {d?.qr && (
+          <img
+            className="donate-qr"
+            src={d.qr}
+            alt={en ? 'Support QR code' : 'Mã QR ủng hộ'}
+          />
+        )}
         <dl className="bank-details">
           {[
             [d.bank, en ? 'Bank' : 'Ngân hàng'],
@@ -1594,7 +2163,10 @@ function DonateView({ config }: { config: Settings }) {
           )}
         </dl>
         {d.account && (
-          <CopyButton value={d.account} label={en ? 'Copy account number' : 'Sao chép số tài khoản'} />
+          <CopyButton
+            value={d.account}
+            label={en ? 'Copy account number' : 'Sao chép số tài khoản'}
+          />
         )}
         {d.url && (
           <External href={d.url} primary>

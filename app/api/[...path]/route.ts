@@ -14,6 +14,7 @@ import {
   getRootPatchJobStatus,
   fetchPatchedDownloadResponse,
 } from '@/lib/root-patch';
+import { resolveOtaDownload } from '@/lib/ota-resolver';
 import {
   settings,
   overrides,
@@ -203,6 +204,59 @@ export async function GET(req: Request) {
         ),
       );
     if (route === 'ota') return json(await ota());
+    if (route === 'ota/resolve') {
+      const id = u.searchParams.get('id') || undefined;
+      let device = u.searchParams.get('device') || undefined;
+      let region = u.searchParams.get('region') || undefined;
+      let version = u.searchParams.get('version') || undefined;
+      if (id && (!device || !version)) {
+        const entry = await findEntry(id);
+        if (entry) {
+          device ||= entry.device;
+          region ||= entry.region;
+          version ||= entry.version;
+        }
+      }
+      const vIdxStr = u.searchParams.get('versionIndex');
+      const versionIndex = vIdxStr !== null ? Number(vIdxStr) : undefined;
+      const forceRefresh =
+        u.searchParams.get('forceRefresh') === 'true' ||
+        u.searchParams.get('force') === 'true';
+      return json(
+        await resolveOtaDownload({
+          id,
+          device,
+          region,
+          version,
+          versionIndex,
+          forceRefresh,
+        }),
+      );
+    }
+    if (route === 'ota/download') {
+      const id = u.searchParams.get('id') || undefined;
+      let device = u.searchParams.get('device') || undefined;
+      let region = u.searchParams.get('region') || undefined;
+      let version = u.searchParams.get('version') || undefined;
+      if (id && (!device || !version)) {
+        const entry = await findEntry(id);
+        if (entry) {
+          device ||= entry.device;
+          region ||= entry.region;
+          version ||= entry.version;
+        }
+      }
+      const vIdxStr = u.searchParams.get('versionIndex');
+      const versionIndex = vIdxStr !== null ? Number(vIdxStr) : undefined;
+      const result = await resolveOtaDownload({
+        id,
+        device,
+        region,
+        version,
+        versionIndex,
+      });
+      return Response.redirect(result.url, 302);
+    }
     if (route === 'stats') return json(await traffic());
     if (route === 'zip')
       return json(await zipBrowser(u.searchParams.get('id') || ''));
@@ -296,6 +350,34 @@ export async function POST(req: Request) {
           str(data.flavor, 100),
           str(data.sessionCookie, 500),
         ),
+      );
+    }
+    if (route === 'ota/resolve') {
+      const data = JSON.parse(new TextDecoder().decode(raw));
+      const id = str(data.id, 200) || undefined;
+      let device = str(data.device, 200) || undefined;
+      let region = str(data.region, 50) || undefined;
+      let version = str(data.version, 200) || undefined;
+      if (id && (!device || !version)) {
+        const entry = await findEntry(id);
+        if (entry) {
+          device ||= entry.device;
+          region ||= entry.region;
+          version ||= entry.version;
+        }
+      }
+      const versionIndex =
+        typeof data.versionIndex === 'number' ? data.versionIndex : undefined;
+      const forceRefresh = Boolean(data.forceRefresh || data.force);
+      return json(
+        await resolveOtaDownload({
+          id,
+          device,
+          region,
+          version,
+          versionIndex,
+          forceRefresh,
+        }),
       );
     }
     if (!(await isAdmin(req)))

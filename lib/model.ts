@@ -26,6 +26,7 @@ export type Entry = {
   mirrors?: { name: string; url: string }[];
   published?: number;
   isLatest?: boolean;
+  expiresAt?: number;
 };
 export type Catalog = {
   path: string;
@@ -124,6 +125,17 @@ export type RootPatchJobStatus = {
   wait_seconds?: number;
   position?: number;
   reference?: string;
+};
+export type OtaResolveResult = {
+  ok: boolean;
+  url: string;
+  expires_at?: number;
+  manual?: boolean;
+  cached?: boolean;
+  device?: string;
+  region?: string;
+  version?: string;
+  error?: string;
 };
 export const defaultSettings: Settings = {
   name: 'Kho ROM Việt',

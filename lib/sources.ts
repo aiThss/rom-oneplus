@@ -7,6 +7,7 @@ import {
   visibleEntry,
   recoveryEntry,
 } from './model';
+import { getCachedOtaUrl, getCachedOtaUrlById } from './ota-resolver';
 import {
   parseArchive,
   parseSourceForge,
@@ -369,6 +370,20 @@ export async function entryDetails(id: string) {
     throw new Error('Không tìm thấy bản phát hành. Hãy mở danh mục trước.');
   if (!visibleEntry(entry, await settings()))
     throw new Error('Bản phát hành không được hiển thị.');
+  if (entry.source === 'ota') {
+    const cachedOta =
+      getCachedOtaUrlById(entry.id) ||
+      (entry.device && entry.version
+        ? getCachedOtaUrl(entry.device, entry.region || '', entry.version)
+        : null);
+    if (cachedOta) {
+      entry = {
+        ...entry,
+        downloadUrl: cachedOta.url,
+        expiresAt: cachedOta.expires_at,
+      };
+    }
+  }
   if (entry.source === 'archive' && !entry.checksum && entry.kind === 'file') {
     try {
       const url = `${ARCHIVE}/index.php?view=md5&mode=current&dir=${encodeURIComponent(entry.parent)}`;
