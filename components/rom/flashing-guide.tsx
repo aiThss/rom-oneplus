@@ -9,10 +9,10 @@ import {
   ExternalLink,
   HardDrive,
   Terminal,
-  Info,
   CheckCircle2,
   FolderArchive,
   Maximize2,
+  Mail,
 } from 'lucide-react';
 import { buttonVariants } from '@/components/ui/button';
 import {
@@ -208,15 +208,27 @@ export function FlashingGuideView() {
             </div>
           ) : (
             <div className="patch-unavailable-state border border-dashed border-border rounded-xl p-6 text-center">
-              <Info size={24} className="mx-auto mb-2 text-muted-foreground" />
-              <strong className="block text-foreground mb-1">
-                {en ? 'No download links available yet' : 'Chưa có liên kết tải'}
-              </strong>
-              <p className="text-sm text-muted-foreground max-w-lg mx-auto">
+              <Mail size={26} className="mx-auto mb-2 text-primary" />
+              <strong className="block text-foreground mb-1 text-base">
                 {en
-                  ? 'Please configure tool links and ROM downloads in the Admin Workspace (Custom links → Flashing Guide).'
-                  : 'Vui lòng cấu hình liên kết tải Tool FFF và các bản ROM trong trang Không gian quản trị (Admin → Liên kết riêng → Danh mục Flashing Guide).'}
+                  ? 'Download links are currently being updated'
+                  : 'Chưa có liên kết tải'}
+              </strong>
+              <p className="text-sm text-muted-foreground max-w-lg mx-auto mb-3">
+                {en
+                  ? 'Please wait for the administrator to update the links, or contact via email to request download links:'
+                  : 'Vui lòng đợi admin cập nhật, hoặc bạn có thể gửi qua email này để yêu cầu link tải:'}
               </p>
+              <a
+                href="mailto:danhthai4560@gmail.com?subject=Y%C3%AAu%20c%E1%BA%A7u%20link%20t%E1%BA%A3i%20Tool%20FFF%20%26%20ROM%20OnePlus%2015"
+                className={cn(
+                  buttonVariants({ variant: 'outline', size: 'sm' }),
+                  'inline-flex items-center gap-2 font-mono text-xs hover:border-primary hover:text-primary transition',
+                )}
+              >
+                <Mail size={14} className="text-primary" />
+                danhthai4560@gmail.com
+              </a>
             </div>
           )}
         </section>
