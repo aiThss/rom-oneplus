@@ -115,7 +115,7 @@ export function validateCustom(value: unknown): Entry {
   const o = obj(value);
   const name = str(o.name, 300);
   if (!name) throw new Error('Thiếu tên phần mềm.');
-  const parent = normalizedPath(str(o.parent, 800));
+  const parent = normalizedPath(str(o.parent ?? '', 800));
   const sourceUrl = url(o.sourceUrl);
   if (!sourceUrl) throw new Error('Thiếu trang nguồn.');
   return {
@@ -124,14 +124,19 @@ export function validateCustom(value: unknown): Entry {
     kind: 'file',
     name,
     parent,
-    path: parent + '/' + name,
-    device: str(o.device, 100),
-    category: o.category === 'recovery' ? 'recovery' : 'archive',
+    path: parent ? parent + '/' + name : name,
+    device: str(o.device ?? '', 100),
+    category:
+      o.category === 'recovery'
+        ? 'recovery'
+        : o.category === 'flashing-guide'
+          ? 'flashing-guide'
+          : 'archive',
     sourceUrl,
-    downloadUrl: url(o.downloadUrl) || undefined,
+    downloadUrl: o.downloadUrl ? url(o.downloadUrl) : undefined,
     description: str(o.description || '', 5000),
     changelogVi: str(o.changelogVi || '', 60000),
-    checksum: str(o.checksum || '', 128) || undefined,
+    checksum: o.checksum ? str(o.checksum, 128) : undefined,
     checksumType: str(o.checksumType || 'MD5', 16),
     mirrors: links(o.mirrors || []),
   };

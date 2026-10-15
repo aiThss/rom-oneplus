@@ -191,7 +191,9 @@ export async function GET(req: Request) {
               ? 'archive'
               : route === 'recovery'
                 ? 'recovery'
-                : route === 'logs'
+                : route === 'flashing-guide'
+                  ? 'flashing-guide'
+                  : route === 'logs'
                   ? 'changelog'
                   : null;
     if (section && !config.sections.find((s) => s.id === section)?.enabled)
@@ -271,6 +273,13 @@ export async function GET(req: Request) {
             recoveryEntry,
             ...(await customs()).filter((e) => e.category === 'recovery'),
           ],
+          await overrides(),
+        ).filter((e) => visibleEntry(e, config)),
+      );
+    if (route === 'flashing-guide')
+      return json(
+        applyOverrides(
+          (await customs()).filter((e) => e.category === 'flashing-guide'),
           await overrides(),
         ).filter((e) => visibleEntry(e, config)),
       );

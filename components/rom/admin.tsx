@@ -1290,6 +1290,10 @@ function CustomManager({
                 onChange={(category) => setEdit({ ...edit, category })}
                 options={[
                   { value: 'archive', label: 'Kho phần mềm' },
+                  {
+                    value: 'flashing-guide',
+                    label: 'Flashing Guide (Công cụ & ROM Flash)',
+                  },
                   { value: 'recovery', label: 'Recovery / OFOX' },
                 ]}
               />
@@ -1391,7 +1395,13 @@ function CustomManager({
               <div className="grow">
                 <h3>{e.name}</h3>
                 <p>
-                  {e.device} · {e.parent || 'Trang đầu'}
+                  {e.device} ·{' '}
+                  {e.category === 'flashing-guide'
+                    ? 'Flashing Guide'
+                    : e.category === 'recovery'
+                      ? 'Recovery'
+                      : 'Kho phần mềm'}{' '}
+                  · {e.parent || 'Trang đầu'}
                 </p>
               </div>
               <Button

@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { Shell } from './shell';
 import { RootGuideView } from './root-guide';
+import { FlashingGuideView } from './flashing-guide';
 import {
   api,
   useRemote,
@@ -162,6 +163,8 @@ export function Library() {
                 : 'Quản trị viên đã tắt mục này.'
             }
           />
+        ) : activeView === 'flashing-guide' ? (
+          <FlashingGuideView />
         ) : activeView === 'ota' ? (
           <OtaView />
         ) : activeView === 'root-guide' ? (

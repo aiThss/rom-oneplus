@@ -272,3 +272,21 @@ void test('Root Guide section is registered in default settings and configurable
   const validated = validateSettings(defaultSettings);
   assert.ok(validated.sections.some((s) => s.id === 'root-guide'));
 });
+
+void test('Flashing Guide section is registered right below archive and category is valid', () => {
+  const flashSec = defaultSettings.sections.find((s) => s.id === 'flashing-guide');
+  assert.ok(flashSec, 'flashing-guide section must exist in defaultSettings');
+  assert.equal(flashSec.enabled, true);
+
+  const archiveIdx = defaultSettings.sections.findIndex((s) => s.id === 'archive');
+  const flashIdx = defaultSettings.sections.findIndex((s) => s.id === 'flashing-guide');
+  assert.equal(flashIdx, archiveIdx + 1, 'flashing-guide must be placed right after archive');
+
+  const customEntry = validateCustom({
+    name: 'Fastboot Firmware Flasher',
+    sourceUrl: 'https://example.com/fff',
+    category: 'flashing-guide',
+  });
+  assert.equal(customEntry.category, 'flashing-guide');
+});
+

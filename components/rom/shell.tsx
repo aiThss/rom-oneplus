@@ -18,6 +18,7 @@ import {
   Menu,
   Smartphone,
   Terminal,
+  Zap,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -32,6 +33,12 @@ import { useLanguage } from '@/lib/language';
 const SmartphoneIcon = Smartphone;
 export const navigation = [
   { id: 'archive', label: 'Kho phần mềm', icon: Grid2X2, hidden: false },
+  {
+    id: 'flashing-guide',
+    label: 'Flashing Guide',
+    icon: Zap,
+    hidden: false,
+  },
   {
     id: 'xiaomi',
     label: 'Xiaomi / HyperOS',
@@ -92,6 +99,7 @@ export function Shell({
       language === 'en'
         ? {
             library: 'Library',
+            flashingGuide: 'Flashing Guide',
             recovery: 'Recovery / OFOX',
             ota: 'Firmware OTA',
             root: 'Root Guide',
@@ -111,6 +119,7 @@ export function Shell({
           }
         : {
             library: 'Kho phần mềm',
+            flashingGuide: 'Flashing Guide',
             recovery: 'Recovery / OFOX',
             ota: 'Firmware OTA',
             root: 'Root Guide',
@@ -133,6 +142,7 @@ export function Shell({
   const translatedLabel = (id: string, fallback: string) =>
     ({
       archive: labels.library,
+      'flashing-guide': labels.flashingGuide,
       recovery: labels.recovery,
       ota: labels.ota,
       'root-guide': labels.root,

@@ -26,14 +26,28 @@ export async function writeDocument(key: string, value: unknown) {
 }
 function currentSettings(value: Settings): Settings {
   const storedSections = Array.isArray(value.sections) ? value.sections : [];
-  const hasXiaomi = storedSections.some((section) => section.id === 'xiaomi');
-  const lastOrder = storedSections.reduce(
+  const hasFlashingGuide = storedSections.some(
+    (section) => section.id === 'flashing-guide',
+  );
+  const archiveSection = storedSections.find((s) => s.id === 'archive');
+  const normalizedStored = hasFlashingGuide
+    ? storedSections
+    : [
+        ...storedSections,
+        {
+          id: 'flashing-guide',
+          order: archiveSection ? archiveSection.order + 0.5 : 0.5,
+          enabled: true,
+        },
+      ];
+  const hasXiaomi = normalizedStored.some((section) => section.id === 'xiaomi');
+  const lastOrder = normalizedStored.reduce(
     (max, section) => Math.max(max, section.order),
     -1,
   );
   const sections = defaultSettings.sections.map(
     (fallback) =>
-      storedSections.find((section) => section.id === fallback.id) ||
+      normalizedStored.find((section) => section.id === fallback.id) ||
       (fallback.id === 'xiaomi' && !hasXiaomi
         ? { ...fallback, order: lastOrder + 1 }
         : fallback),

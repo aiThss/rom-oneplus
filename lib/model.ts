@@ -145,6 +145,7 @@ export const defaultSettings: Settings = {
   devices: [],
   sections: [
     'archive',
+    'flashing-guide',
     'xiaomi',
     'recovery',
     'ota',
