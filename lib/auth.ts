@@ -16,7 +16,12 @@ function throttleBucket(req: Request) {
   return ip && req.headers.has('cf-ray') ? `cf:${digest(ip)}` : 'unknown';
 }
 function cookieSecure(req: Request) {
-  return new URL(platform.publicOrigin || req.url).protocol === 'https:';
+  if (req.headers.get('x-forwarded-proto') === 'https') return true;
+  try {
+    return new URL(platform.publicOrigin || req.url).protocol === 'https:';
+  } catch {
+    return false;
+  }
 }
 export async function isAdmin(req: Request) {
   const token = (req.headers.get('cookie') || '')
@@ -31,12 +36,60 @@ export async function isAdmin(req: Request) {
     .first());
 }
 export function checkOrigin(req: Request) {
-  if (
-    req.headers.get('origin') !==
-      (platform.publicOrigin || new URL(req.url).origin) ||
-    req.headers.get('x-rom-csrf') !== '1'
-  )
+  if (req.headers.get('x-rom-csrf') !== '1') {
     throw new Error('Yêu cầu không cùng nguồn.');
+  }
+
+  const originHeader = req.headers.get('origin');
+  let requestOrigin = originHeader ? originHeader.trim() : null;
+  if (!requestOrigin) {
+    const referer = req.headers.get('referer');
+    if (referer) {
+      try {
+        requestOrigin = new URL(referer).origin;
+      } catch {
+        // ignore invalid referer URL
+      }
+    }
+  }
+
+  const allowed = new Set<string>();
+
+  // 1. Configured public origin from platform / env
+  try {
+    const pub = platform.publicOrigin;
+    if (pub) {
+      allowed.add(new URL(pub).origin.toLowerCase());
+    }
+  } catch {
+    // ignore
+  }
+
+  // 2. Reverse proxy headers (Traefik / Dokploy / Cloudflare / Nginx)
+  const proto = req.headers.get('x-forwarded-proto') || 'https';
+  const host =
+    req.headers.get('x-forwarded-host') ||
+    req.headers.get('host');
+  if (host) {
+    allowed.add(`${proto}://${host}`.toLowerCase());
+    allowed.add(`https://${host}`.toLowerCase());
+    allowed.add(`http://${host}`.toLowerCase());
+  }
+
+  // 3. Container request URL
+  try {
+    allowed.add(new URL(req.url).origin.toLowerCase());
+  } catch {
+    // ignore
+  }
+
+  const cleanReqOrigin = requestOrigin
+    ? requestOrigin.replace(/\/+$/, '').toLowerCase()
+    : null;
+
+  if (!cleanReqOrigin || !allowed.has(cleanReqOrigin)) {
+    throw new Error('Yêu cầu không cùng nguồn.');
+  }
 }
 export async function login(req: Request, username: string, password: string) {
   const bucket = throttleBucket(req);

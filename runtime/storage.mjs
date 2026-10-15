@@ -8,26 +8,14 @@ export function dataDirectory() {
   return resolve(process.env.DATA_DIR || '.local/node-data');
 }
 export function publicOrigin() {
-  const raw = process.env.PUBLIC_ORIGIN;
-  if (!raw)
-    throw new Error(
-      'Set PUBLIC_ORIGIN to the public HTTPS origin of this site.',
-    );
-  const url = new URL(raw);
-  const loopback = ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname);
-  if (
-    (url.protocol !== 'https:' && !(loopback && url.protocol === 'http:')) ||
-    url.username ||
-    url.password ||
-    url.pathname !== '/' ||
-    url.search ||
-    url.hash
-  ) {
-    throw new Error(
-      'PUBLIC_ORIGIN must be an HTTPS origin without a path, query or credentials.',
-    );
+  const raw = process.env.PUBLIC_ORIGIN?.trim();
+  if (!raw) return 'http://127.0.0.1:3000';
+  try {
+    const url = new URL(raw);
+    return url.origin;
+  } catch {
+    return 'http://127.0.0.1:3000';
   }
-  return url.origin;
 }
 export function openDatabase(directory = dataDirectory()) {
   mkdirSync(directory, { recursive: true, mode: 0o700 });
@@ -78,9 +66,9 @@ export function provisionAdmin(database, { reset = false } = {}) {
     throw new Error(
       'ADMIN_USERNAME must contain 3–60 letters, digits, _, . or -.',
     );
-  if (password.length < 14 || password.length > 200)
+  if (password.length < 8 || password.length > 200)
     throw new Error(
-      'Set ADMIN_PASSWORD to a unique password of 14–200 characters before the first start.',
+      'Set ADMIN_PASSWORD to a password of 8–200 characters before the first start.',
     );
   const salt = randomBytes(16).toString('hex');
   const hash = scryptSync(password, salt, 32).toString('hex');

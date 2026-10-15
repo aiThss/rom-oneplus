@@ -11,7 +11,10 @@ const origin = publicOrigin();
 const database = openDatabase();
 try {
   migrate(database, resolve(applicationRoot, 'drizzle'));
-  provisionAdmin(database);
+  const hasEnvPassword = Boolean(process.env.ADMIN_PASSWORD?.trim());
+  provisionAdmin(database, {
+    reset: hasEnvPassword || Boolean(process.env.RESET_ADMIN),
+  });
 } finally {
   database.close();
 }

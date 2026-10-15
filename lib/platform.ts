@@ -29,24 +29,13 @@ export const platform: Platform = {
     },
   },
   get publicOrigin() {
-    const raw = bindings.PUBLIC_ORIGIN;
-    if (!raw)
-      throw new Error(
-        'Set PUBLIC_ORIGIN to the public HTTPS origin of this site.',
-      );
-    const url = new URL(raw);
-    const loopback = ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname);
-    if (
-      (url.protocol !== 'https:' && !(loopback && url.protocol === 'http:')) ||
-      url.username ||
-      url.password ||
-      url.pathname !== '/' ||
-      url.search ||
-      url.hash
-    )
-      throw new Error(
-        'PUBLIC_ORIGIN must be an HTTPS origin without a path, query or credentials.',
-      );
-    return url.origin;
+    const raw = (bindings.PUBLIC_ORIGIN || process.env.PUBLIC_ORIGIN)?.trim();
+    if (!raw) return '';
+    try {
+      const url = new URL(raw);
+      return url.origin;
+    } catch {
+      return '';
+    }
   },
 };
